@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 from app.database import engine
 from app.models import base
 from app.routers import auth, media, leads
+from app.routers import listings as listings_router
 
 # Create database tables
 base.Base.metadata.create_all(bind=engine)
@@ -42,6 +43,7 @@ async def add_security_headers(request: Request, call_next):
 app.include_router(auth.router)
 app.include_router(media.router)
 app.include_router(leads.router)
+app.include_router(listings_router.router)
 
 @app.get("/")
 @limiter.limit("5/minute")

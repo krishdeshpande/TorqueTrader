@@ -21,9 +21,9 @@ from app.schemas.listing import ListingCreate, ListingResponse, ListingStatusUpd
 from app.services import listing_service
 
 # ---------------------------------------------------------------------------
-# Auth dependencies — MUST be implemented by the Auth team.
-# These callables are expected to return a user-like object with at minimum
-# an ``id: int`` attribute (and ``is_admin: bool`` for the admin guard).
+# Auth dependencies (implemented by the Auth team in app.core.security).
+# get_current_user returns a User ORM object (has .id attribute).
+# require_admin is a RoleChecker([UserRole.ADMIN]) instance.
 # ---------------------------------------------------------------------------
 from app.core.security import get_current_user, require_admin  # noqa: E402
 

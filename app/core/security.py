@@ -59,3 +59,6 @@ class RoleChecker:
                 detail="Operation not permitted for your role"
             )
         return user
+
+# Admin-only dependency for the listings module
+require_admin = RoleChecker(allowed_roles=[UserRole.ADMIN])

@@ -4,12 +4,13 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.database import engine
-from app.models import base
+from app.models.base import Base
+import app.models  # noqa: F401 — ensure all ORM models are registered
 from app.routers import auth, media, leads
 from app.routers import listings as listings_router
 
 # Create database tables
-base.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 # Setup SlowAPI Limiter
 limiter = Limiter(key_func=get_remote_address)

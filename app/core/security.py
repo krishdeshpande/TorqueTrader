@@ -61,4 +61,4 @@ class RoleChecker:
         return user
 
 # Admin-only dependency for the listings module
-require_admin = RoleChecker(allowed_roles=[UserRole.ADMIN])
+require_admin = RoleChecker(allowed_roles=[UserRole.admin])

@@ -1,40 +1,40 @@
 # ── Web framework ───────────────────────────────────────────────────────────
-fastapi==0.111.0
-uvicorn[standard]==0.29.0
+fastapi>=0.111.0,<0.112.0
+uvicorn[standard]>=0.29.0,<0.30.0
 
 # ── Database ────────────────────────────────────────────────────────────────
-sqlalchemy==2.0.30
-alembic==1.13.1
-psycopg2-binary==2.9.9       # PostgreSQL driver (prod)
+sqlalchemy>=2.0.30,<2.1.0
+alembic>=1.13.0,<1.14.0
+psycopg2-binary>=2.9.9
 
 # ── Validation & settings ───────────────────────────────────────────────────
-pydantic==2.7.1
-pydantic-settings==2.2.1
+pydantic>=2.7.0,<2.8.0
+pydantic-settings>=2.2.0,<2.3.0
 
 # ── Auth ────────────────────────────────────────────────────────────────────
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
 
 # ── Redis ───────────────────────────────────────────────────────────────────
-redis==5.0.4
-fakeredis==2.23.1            # Used in dev/test when REDIS_URL is not set
+redis>=5.0.0,<6.0.0
+fakeredis>=2.23.0
 
 # ── Rate limiting ───────────────────────────────────────────────────────────
-slowapi==0.1.9
+slowapi>=0.1.9
 
 # ── File handling ───────────────────────────────────────────────────────────
-python-multipart==0.0.9
-Pillow==11.2.1
-boto3==1.34.106              # S3-compatible (used for Cloudflare R2)
+python-multipart>=0.0.9
+Pillow>=10.3.0
+boto3>=1.34.0
 
 # ── MIME detection ──────────────────────────────────────────────────────────
-python-magic==0.4.27         # Linux / macOS
-python-magic-bin==0.4.14; sys_platform == "win32"  # Windows
+python-magic>=0.4.27
+python-magic-bin>=0.4.14; sys_platform == "win32"
 
 # ── Email OTP ───────────────────────────────────────────────────────────────
-resend==1.1.0
+resend>=1.1.0
 
 # ── Testing ─────────────────────────────────────────────────────────────────
-pytest==8.2.0
-pytest-asyncio==0.23.6
-httpx==0.27.0                # Required by TestClient in newer FastAPI
+pytest>=8.2.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0

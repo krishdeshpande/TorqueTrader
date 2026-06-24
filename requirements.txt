@@ -24,7 +24,7 @@ slowapi==0.1.9
 
 # ── File handling ───────────────────────────────────────────────────────────
 python-multipart==0.0.9
-Pillow==10.3.0
+Pillow==11.2.1
 boto3==1.34.106              # S3-compatible (used for Cloudflare R2)
 
 # ── MIME detection ──────────────────────────────────────────────────────────

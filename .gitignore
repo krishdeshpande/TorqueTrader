@@ -1,13 +1,45 @@
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*.pyo
+*.egg
 *.egg-info/
-.env
-.venv/
-venv/
 dist/
 build/
-*.egg
-.mypy_cache/
-.pytest_cache/
+.eggs/
 
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Environment secrets ───────────────────────────────────────────────────────
+.env
+*.env.local
+
+# ── Database files ────────────────────────────────────────────────────────────
 *.db
+*.sqlite
+*.sqlite3
+torque_trader.db
+
+# ── Local mock storage ────────────────────────────────────────────────────────
+mock_s3/
+
+# ── Testing & coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Type checking & linting ───────────────────────────────────────────────────
+.mypy_cache/
+.ruff_cache/
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

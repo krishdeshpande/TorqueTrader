@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: torquetrader-api
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: JWT_SECRET_KEY
+        generateValue: true          # Render auto-generates a secret
+      - key: DATABASE_URL
+        fromDatabase:
+          name: torquetrader-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false                  # Set manually in Render dashboard
+      - key: RESEND_API_KEY
+        sync: false
+      - key: OTP_FROM_EMAIL
+        value: noreply@torquetrader.in
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_PUBLIC_BUCKET
+        value: torquetrader-public
+      - key: R2_PRIVATE_BUCKET
+        value: torquetrader-private
+      - key: ALLOWED_ORIGINS
+        value: "*"                   # Update to your frontend domain before launch
+    healthCheckPath: /health
+
+databases:
+  - name: torquetrader-db
+    databaseName: torquetrader
+    user: torquetrader
+    plan: free

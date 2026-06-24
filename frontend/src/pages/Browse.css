@@ -1,0 +1,76 @@
+.browse-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 100px 0 32px;
+}
+.page-title { font-family: var(--font-display); font-size: 2rem; font-weight: 700; }
+.page-subtitle { color: var(--text-secondary); margin-top: 4px; }
+
+.browse-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  padding-top: 40px;
+  padding-bottom: 80px;
+  align-items: start;
+}
+
+.filter-sidebar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.filter-header { display: flex; align-items: center; justify-content: space-between; }
+.filter-title { font-weight: 700; font-size: 1rem; }
+.filter-clear {
+  background: none;
+  font-size: 0.8rem;
+  color: var(--accent);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+.filter-clear:hover { background: var(--accent-dim); }
+.filter-group { display: flex; flex-direction: column; gap: 8px; }
+.filter-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+.range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.body-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.body-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  transition: var(--transition);
+}
+.body-pill:hover, .body-pill.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.browse-main { min-width: 0; }
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+@media (max-width: 900px) {
+  .browse-layout { grid-template-columns: 1fr; }
+  .filter-sidebar { position: static; }
+}

@@ -1,0 +1,55 @@
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  transition: var(--transition);
+}
+.modal-close:hover { color: var(--text-primary); border-color: var(--accent); }
+
+.modal-header { text-align: center; margin-bottom: 32px; }
+.modal-logo { font-size: 2.5rem; margin-bottom: 16px; }
+.modal-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+.modal-subtitle { color: var(--text-secondary); font-size: 0.9rem; }
+
+.modal-form { display: flex; flex-direction: column; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.input-otp { text-align: center; font-size: 1.8rem; letter-spacing: 16px; font-weight: 700; }
+
+.btn-full { width: 100%; justify-content: center; }
+.btn-full:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+.modal-footer-note {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

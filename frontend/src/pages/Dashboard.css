@@ -1,0 +1,47 @@
+.dashboard-page { padding-top: 68px; min-height: 100vh; }
+.dashboard-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 80px 0 32px;
+}
+.dash-header-inner {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+}
+.role-badge {
+  display: inline-block;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.dashboard-body { padding-top: 40px; padding-bottom: 80px; }
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.dash-stat {
+  padding: 24px;
+  text-align: center;
+}
+.dash-stat-value {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.dash-stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+.dash-section-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; margin-bottom: 24px; }
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+@media (max-width: 768px) {
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
+  .dash-header-inner { flex-direction: column; align-items: flex-start; }
+}

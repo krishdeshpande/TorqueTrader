@@ -1,19 +1,10 @@
-# Exclude ALL Python backend files so Vercel never detects FastAPI
-# Frontend lives in frontend/ — Root Directory must be set to "frontend" in Vercel settings
+# Exclude Python backend files from Vercel build context
+# Frontend lives in frontend/ — build handled via root package.json
 
-# Python project files (FastAPI detection triggers from these)
-/pyproject.toml
-/poetry.lock
-/requirements.txt
+/backend-requirements.txt
 /.python-version
-/runtime.txt
-/Procfile
-/render.yaml
-
-# Backend source
 /app/
 /alembic/
-/migrations/
-
-# Any .py file at root or subdirectory
+/render.yaml
+/Procfile
 *.py

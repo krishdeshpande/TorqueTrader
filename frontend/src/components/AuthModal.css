@@ -1,55 +1,114 @@
-.modal-backdrop {
+.auth-backdrop {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(17,24,39,0.5);
+  backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.2s ease;
+  animation: backdropIn 0.2s ease;
 }
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes backdropIn { from { opacity:0; } to { opacity:1; } }
 
-.modal-box {
-  background: var(--bg-card);
+.auth-modal {
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--r-xl);
   padding: 40px;
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   position: relative;
-  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: var(--shadow-lg);
+  animation: modalUp 0.25s cubic-bezier(0.4,0,0.2,1);
 }
-@keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+@keyframes modalUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 
-.modal-close {
+.auth-close {
   position: absolute;
   top: 16px; right: 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
   width: 32px; height: 32px;
   border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text-2);
   font-size: 0.8rem;
-  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--t-fast), color var(--t-fast);
 }
-.modal-close:hover { color: var(--text-primary); border-color: var(--accent); }
+.auth-close:hover { background: var(--surface-2); color: var(--text-1); }
 
-.modal-header { text-align: center; margin-bottom: 32px; }
-.modal-logo { font-size: 2.5rem; margin-bottom: 16px; }
-.modal-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
-.modal-subtitle { color: var(--text-secondary); font-size: 0.9rem; }
+.auth-header { margin-bottom: 28px; }
+.auth-wordmark {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 20px;
+  display: block;
+}
+.auth-wordmark span { color: var(--red); }
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+.auth-subtitle { font-size: 0.88rem; color: var(--text-2); line-height: 1.5; }
+.auth-subtitle strong { color: var(--text-1); }
 
-.modal-form { display: flex; flex-direction: column; gap: 16px; }
-.form-group { display: flex; flex-direction: column; gap: 8px; }
-.form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
-.input-otp { text-align: center; font-size: 1.8rem; letter-spacing: 16px; font-weight: 700; }
+.auth-form { display: flex; flex-direction: column; gap: 20px; }
 
-.btn-full { width: 100%; justify-content: center; }
-.btn-full:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-.modal-footer-note {
+/* OTP boxes */
+.otp-boxes {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.otp-box {
+  flex: 1;
+  height: 56px;
   text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-1);
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+  caret-color: transparent;
+}
+.otp-box:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(204,41,54,0.1);
+  background: var(--surface);
+}
+.otp-box.filled {
+  border-color: var(--red);
+  background: var(--surface);
+}
+
+.otp-resend { text-align: center; margin-top: -8px; }
+.resend-timer { font-size: 0.82rem; color: var(--text-3); }
+.resend-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.resend-btn:hover { color: var(--red-hover); }
+
+.auth-terms {
   margin-top: 20px;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--text-3);
+  text-align: center;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .auth-modal { padding: 28px 20px; }
+  .otp-box { height: 48px; font-size: 1.25rem; }
 }

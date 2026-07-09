@@ -1,0 +1,12 @@
+# Tell Vercel to ignore the Python backend entirely
+# The frontend is built from the 'frontend/' subdirectory
+app/
+alembic/
+*.py
+requirements.txt
+pyproject.toml
+poetry.lock
+.python-version
+runtime.txt
+Procfile
+render.yaml

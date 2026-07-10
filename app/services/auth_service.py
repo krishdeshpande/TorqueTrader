@@ -36,7 +36,7 @@ def _send_otp_email(email: str, otp: str) -> None:
     resend.api_key = settings.RESEND_API_KEY
     try:
         resend.Emails.send({
-            "from": settings.OTP_FROM_EMAIL,
+            "from": "notifications@torquetrader.in",
             "to": email,
             "subject": "Your TorqueTrader verification code",
             "html": f"""

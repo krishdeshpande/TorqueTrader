@@ -1,222 +1,415 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getListings } from '../api';
+import { getListings, rcLookup } from '../api';
 import ListingCard, { ListingCardSkeleton } from '../components/ListingCard';
 import { Icons } from '../components/Icons';
+import TermsModal from '../components/TermsModal';
+import PrivacyModal from '../components/PrivacyModal';
 import './Home.css';
 
-const MAKES  = ['Ducati','BMW','Kawasaki','Triumph','Harley-Davidson','KTM','Yamaha','Honda'];
-const PRICES = ['Under ₹10L','Under ₹20L','Under ₹30L','Under ₹50L'];
+const BRANDS = ['Ducati', 'BMW', 'Kawasaki', 'Triumph', 'Aprilia', 'KTM', 'Harley-Davidson', 'Suzuki'];
 
-// Floating mock card shown in hero
-function MockCard() {
-  return (
-    <div className="mock-card">
-      <div className="mock-card-img">
-        <svg width="100" height="64" viewBox="0 0 120 70" fill="none" stroke="#D1D5DB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="22" cy="50" r="16"/><circle cx="98" cy="50" r="16"/>
-          <path d="M22 50 L45 20 L75 20 L98 50"/>
-          <path d="M45 20 L38 50"/><path d="M75 20 L85 30 L98 50"/>
-          <path d="M60 20 L60 35 L70 42"/>
-          <path d="M75 20 L80 14 L90 14"/>
-        </svg>
-        <span className="mock-score">✓ Score: 91</span>
-      </div>
-      <div className="mock-body">
-        <div className="mock-meta">2023 · DUCATI</div>
-        <div className="mock-title">Panigale V4 S</div>
-        <div className="mock-price">₹28,50,000</div>
-        <div className="mock-specs">
-          <span>5,200 km</span><span>·</span><span>V-Twin</span><span>·</span><span>214 BHP</span>
-        </div>
-        <div className="mock-footer">📍 Mumbai, Maharashtra</div>
-      </div>
-    </div>
-  );
-}
+const MARKET_BENCHMARKS = [
+  { model: 'Ducati Panigale V4 S (2022-2023)', range: 'Rs 25.5L - Rs 29.0L', status: 'High Demand' },
+  { model: 'BMW S1000RR M-Package (2021-2023)', range: 'Rs 22.0L - Rs 26.5L', status: 'Stable' },
+  { model: 'Kawasaki Ninja ZX-10R (2021-2023)', range: 'Rs 15.5L - Rs 18.0L', status: 'Active' },
+  { model: 'Triumph Street Triple 765 RS (2022-2024)', range: 'Rs 11.5L - Rs 13.2L', status: 'High Demand' },
+];
 
 export default function Home() {
   const [listings, setListings] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [location, setLocation] = useState('');
-  const [make, setMake]         = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [plateInput, setPlateInput] = useState('');
+  const [plateLoading, setPlateLoading] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    getListings({ limit: 6 })
+    getListings()
       .then(({ data }) => setListings(data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (location) params.set('location', location);
-    if (make)     params.set('make', make);
-    navigate(`/listings?${params.toString()}`);
+    if (selectedBrand) {
+      navigate(`/listings?make=${encodeURIComponent(selectedBrand)}`);
+    } else {
+      navigate('/listings');
+    }
   };
 
+  const handlePlateCheck = async (e) => {
+    e.preventDefault();
+    if (!plateInput.trim()) return;
+    setPlateLoading(true);
+    try {
+      const data = await rcLookup(plateInput);
+      navigate('/dashboard/new', { state: { prefillRC: data } });
+    } catch (_) {
+      navigate('/dashboard/new');
+    } finally {
+      setPlateLoading(false);
+    }
+  };
+
+  const featured = listings[0] || null;
+
   return (
-    <div className="home-page">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="hero">
-        <div className="container hero-inner">
-          <div className="hero-left">
-            <div className="hero-tag">🏆 India's #1 Verified Superbike Platform</div>
-            <h1 className="hero-title">
-              India's Most Trusted<br />
-              <span className="hero-red">Superbike</span> Marketplace
-            </h1>
-            <p className="hero-body">
-              Every listing is inspected, scored for transparency, and backed by verified documents — so you can buy with confidence.
-            </p>
-
-            <form className="hero-search" onSubmit={handleSearch}>
-              <div className="search-city">
-                <span className="search-icon">{Icons.mapPin}</span>
-                <input
-                  id="hero-city-input"
-                  className="search-input"
-                  type="text"
-                  placeholder="City or state…"
-                  value={location}
-                  onChange={e => setLocation(e.target.value)}
-                />
-              </div>
-              <div className="search-divider" />
-              <div className="search-make">
-                <select
-                  id="hero-make-select"
-                  className="search-input"
-                  value={make}
-                  onChange={e => setMake(e.target.value)}
-                >
-                  <option value="">All brands</option>
-                  {MAKES.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <button id="hero-search-btn" type="submit" className="btn btn-primary search-btn">
-                {Icons.search} Search
-              </button>
-            </form>
-
-            <div className="hero-pills">
-              {MAKES.slice(0,5).map(m => (
-                <button key={m} className="hero-pill" onClick={() => navigate(`/listings?make=${m}`)}>{m}</button>
-              ))}
-              {PRICES.map(p => (
-                <button key={p} className="hero-pill hero-pill-price" onClick={() => {
-                  const val = p.replace('Under ₹','').replace('L','');
-                  navigate(`/listings?max_price=${Number(val) * 100000}`);
-                }}>{p}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="hero-right">
-            <MockCard />
-            <div className="hero-badge-float">
-              <span className="hbf-dot" />
-              <span>Live listing</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Trust bar ────────────────────────────────────────────────────── */}
-      <section className="trust-bar">
-        <div className="container trust-inner">
-          {[
-            { icon: Icons.listCheck, val: '500+',  label: 'Verified Listings' },
-            { icon: Icons.shield,    val: '100%',  label: 'RC Verified Bikes' },
-            { icon: Icons.mapPin,    val: '30+',   label: 'Cities Covered'    },
-            { icon: Icons.star,      val: '4.8★',  label: 'Buyer Satisfaction' },
-          ].map(({ icon, val, label }) => (
-            <div key={label} className="trust-item">
-              <div className="trust-icon">{icon}</div>
-              <div className="trust-val">{val}</div>
-              <div className="trust-label">{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Latest listings ───────────────────────────────────────────────── */}
-      <section className="section container">
-        <div className="section-head">
-          <div>
-            <h2 className="section-title">Latest Listings</h2>
-            <p className="section-sub">Recently added, verified superbikes</p>
-          </div>
-          <Link to="/listings" className="btn btn-ghost btn-sm">
-            View all {Icons.chevronRight}
-          </Link>
-        </div>
-
-        <div className="listings-grid">
-          {loading
-            ? Array(6).fill(0).map((_, i) => <ListingCardSkeleton key={i} />)
-            : listings.length === 0
-            ? (
-              <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-                {Icons.bike}
-                <h3>No listings yet</h3>
-                <p>Be the first to list your superbike</p>
-                <Link to="/dashboard/new" className="btn btn-primary" style={{ marginTop:16 }}>List Your Bike</Link>
-              </div>
-            )
-            : listings.map(l => <ListingCard key={l.id} listing={l} />)
-          }
-        </div>
-      </section>
-
-      {/* ── How it works ─────────────────────────────────────────────────── */}
-      <section className="how-section">
+    <div className="home-root">
+      {/* ── Marketplace Hero Banner ───────────────────────────────────────── */}
+      <section className="home-hero-section">
         <div className="container">
-          <div className="section-head" style={{ justifyContent:'center', textAlign:'center', flexDirection:'column', alignItems:'center' }}>
-            <h2 className="section-title">How TorqueTrader Works</h2>
-            <p className="section-sub">Transparent buying in three simple steps</p>
-          </div>
-          <div className="how-steps">
-            {[
-              { n:'01', icon: Icons.search,      title: 'Browse Verified Listings',  body: 'Search by brand, location, price, or engine type. Every listing includes a Transparency Score.' },
-              { n:'02', icon: Icons.shield,      title: 'Reveal Seller Contact',      body: 'Sign in once and unlock the seller\'s contact details. No middlemen, no commissions.' },
-              { n:'03', icon: Icons.checkCircle, title: 'Meet & Buy Safely',          body: 'Inspect the bike with our checklist. RC, insurance, and service records — all verified upfront.' },
-            ].map(({ n, icon, title, body }) => (
-              <div key={n} className="how-step">
-                <div className="how-step-top">
-                  <div className="how-n">{n}</div>
-                  <div className="how-icon">{icon}</div>
-                </div>
-                <h3 className="how-title">{title}</h3>
-                <p className="how-body">{body}</p>
+          <div className="hero-grid-layout">
+            {/* Left Content Column */}
+            <div className="hero-text-col">
+              <div className="hero-meta-badge">
+                <span className="badge-tag">MARKETPLACE</span>
+                <span className="badge-desc">Verified High-Performance Motorcycles</span>
               </div>
-            ))}
+
+              <h1 className="hero-main-title">
+                The Trusted Marketplace for Premium Superbikes.
+              </h1>
+
+              <p className="hero-subtext">
+                Every listing is verified against official RTO records, backed by authentic workshop service history, and sold directly by verified enthusiasts.
+              </p>
+
+              {/* Main Search & Brand Selector */}
+              <form className="hero-search-bar" onSubmit={handleSearchSubmit}>
+                <div className="search-field-group">
+                  <span className="search-icon-slot">{Icons.search}</span>
+                  <select
+                    className="hero-select-input"
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                  >
+                    <option value="">All Manufacturers (Ducati, BMW, Kawasaki...)</option>
+                    {BRANDS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="btn btn-primary hero-submit-btn">
+                  Browse Inventory
+                </button>
+              </form>
+
+              {/* Quick Filter Pills */}
+              <div className="hero-quick-brands">
+                <span className="quick-label">Popular:</span>
+                {BRANDS.slice(0, 5).map((b) => (
+                  <button
+                    key={b}
+                    type="button"
+                    className="brand-pill-btn"
+                    onClick={() => navigate(`/listings?make=${encodeURIComponent(b)}`)}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Instant mParivahan RC Plate Lookup Tool */}
+            <div className="hero-rc-lookup-card">
+              <div className="rc-card-header">
+                <div className="rc-card-icon">{Icons.shield}</div>
+                <div>
+                  <h2 className="rc-card-title">Instant mParivahan RC Decoder</h2>
+                  <p className="rc-card-sub">Sell your superbike with 10-second autofill</p>
+                </div>
+              </div>
+
+              <form className="rc-plate-form" onSubmit={handlePlateCheck}>
+                <label className="form-label" htmlFor="plate-lookup-input">
+                  Enter Vehicle Registration Number
+                </label>
+                <div className="plate-input-wrapper">
+                  <div className="plate-ind-tag">
+                    <span className="ind-country">IND</span>
+                  </div>
+                  <input
+                    id="plate-lookup-input"
+                    type="text"
+                    className="plate-text-input"
+                    placeholder="MH02DW1234"
+                    maxLength={13}
+                    value={plateInput}
+                    onChange={(e) => setPlateInput(e.target.value.toUpperCase())}
+                  />
+                </div>
+                <p className="plate-hint">
+                  Supports all Indian RTO plates (MH, DL, KA, TN, HR, GJ, TS, KL, WB).
+                </p>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ width: '100%', height: 46 }}
+                  disabled={plateLoading || !plateInput.trim()}
+                >
+                  {plateLoading ? 'Verifying with VAHAN...' : 'Autofill & Create Listing'}
+                </button>
+              </form>
+
+              <div className="rc-feature-list">
+                <div className="rc-feature-item">
+                  <span className="rc-check">{Icons.check}</span>
+                  <span>Autofills Make, Model, Year, and Engine CC</span>
+                </div>
+                <div className="rc-feature-item">
+                  <span className="rc-check">{Icons.check}</span>
+                  <span>Verifies Ownership Serial & Insurance Expiry</span>
+                </div>
+                <div className="rc-feature-item">
+                  <span className="rc-check">{Icons.check}</span>
+                  <span>Generates Verified Transparency Badge</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Sell CTA ─────────────────────────────────────────────────────── */}
-      <section className="section container">
-        <div className="sell-cta">
-          <div className="sell-cta-text">
-            <h3 className="sell-cta-title">Selling your superbike?</h3>
-            <p className="sell-cta-body">List for free in under 2 minutes. Reach verified buyers across 30+ cities.</p>
+      {/* ── Featured Superbike Spotlight ─────────────────────────────────── */}
+      {featured && (
+        <section className="featured-spotlight-section">
+          <div className="container">
+            <div className="section-header-row">
+              <div>
+                <span className="section-eyebrow">EDITORIAL SPOTLIGHT</span>
+                <h2 className="section-heading">Featured Superbike of the Week</h2>
+              </div>
+              <Link to={`/listings/${featured.id}`} className="btn btn-secondary btn-sm">
+                View Full Dossier {Icons.chevronRight}
+              </Link>
+            </div>
+
+            <div className="spotlight-card">
+              <div className="spotlight-media">
+                <img
+                  src={featured.images?.hero || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80"}
+                  alt={`${featured.year} ${featured.make} ${featured.model}`}
+                  className="spotlight-img"
+                />
+                <div className="spotlight-badge">
+                  <span className="badge badge-green">{Icons.shield} Score: {featured.transparency_score}/100</span>
+                  <span className="badge badge-gray">{featured.rto_state || 'MH02 RTO'}</span>
+                </div>
+              </div>
+
+              <div className="spotlight-content">
+                <div className="spotlight-meta">
+                  <span>{featured.year} {featured.make}</span>
+                  <span>•</span>
+                  <span>{Number(featured.odometer).toLocaleString()} km</span>
+                  <span>•</span>
+                  <span>{featured.ownership_count === 1 ? 'Single Owner' : `${featured.ownership_count} Owners`}</span>
+                </div>
+
+                <h3 className="spotlight-title">
+                  <Link to={`/listings/${featured.id}`}>{featured.model}</Link>
+                </h3>
+
+                <div className="spotlight-price">
+                  Rs {Number(featured.price).toLocaleString('en-IN')}
+                </div>
+
+                <p className="spotlight-review">
+                  "{featured.editorial_review || 'Meticulously maintained, complete authorized service documentation, fitted with premium performance upgrades and stored in a private garage.'}"
+                </p>
+
+                <div className="spotlight-specs-row">
+                  <div className="spotlight-spec">
+                    <span className="k">Power</span>
+                    <span className="v">{featured.bhp} BHP</span>
+                  </div>
+                  <div className="spotlight-spec">
+                    <span className="k">Engine</span>
+                    <span className="v">{featured.displacement_cc ? `${featured.displacement_cc}cc` : featured.engine_config}</span>
+                  </div>
+                  <div className="spotlight-spec">
+                    <span className="k">Exhaust</span>
+                    <span className="v">{featured.exhaust_type || 'Stock Titanium'}</span>
+                  </div>
+                  <div className="spotlight-spec">
+                    <span className="k">Location</span>
+                    <span className="v">{featured.location?.split(',')[0]}</span>
+                  </div>
+                </div>
+
+                <div className="spotlight-actions">
+                  <Link to={`/listings/${featured.id}`} className="btn btn-primary">
+                    Inspect Specifications
+                  </Link>
+                  <Link to="/listings" className="btn btn-ghost">
+                    All Listings ({listings.length})
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
-          <Link to="/dashboard/new" id="sell-cta-btn" className="btn btn-primary btn-lg">
-            List Your Bike for Free {Icons.chevronRight}
-          </Link>
+        </section>
+      )}
+
+      {/* ── Active Inventory Grid ────────────────────────────────────────── */}
+      <section className="inventory-section">
+        <div className="container">
+          <div className="section-header-row">
+            <div>
+              <span className="section-eyebrow">VERIFIED INVENTORY</span>
+              <h2 className="section-heading">Available Superbikes</h2>
+              <p className="section-subtext">Each vehicle includes verified registration and transparent condition disclosures.</p>
+            </div>
+            <Link to="/listings" className="btn btn-secondary btn-sm">
+              Explore All Superbikes ({listings.length}) {Icons.chevronRight}
+            </Link>
+          </div>
+
+          <div className="listings-grid-layout">
+            {loading ? (
+              Array(6).fill(0).map((_, i) => <ListingCardSkeleton key={i} />)
+            ) : listings.length === 0 ? (
+              <div className="empty-inventory-box">
+                <p>No active listings found in this category.</p>
+                <Link to="/dashboard/new" className="btn btn-primary" style={{ marginTop: 12 }}>
+                  Create the First Listing
+                </Link>
+              </div>
+            ) : (
+              listings.slice(0, 6).map((l) => (
+                <ListingCard key={l.id} listing={l} />
+              ))
+            )}
+          </div>
         </div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="home-footer">
-        <div className="container footer-inner">
-          <div className="footer-logo">Torque<span>Trader</span></div>
-          <p className="footer-copy">© 2024 TorqueTrader. All rights reserved.</p>
+      {/* ── Market Benchmark Index ───────────────────────────────────────── */}
+      <section className="market-index-section">
+        <div className="container">
+          <div className="section-header-row">
+            <div>
+              <span className="section-eyebrow">VALUATION DATA</span>
+              <h2 className="section-heading">Indian Superbike Market Index</h2>
+              <p className="section-subtext">Real-time fair market value bands based on verified transactions across Indian metros.</p>
+            </div>
+          </div>
+
+          <div className="market-table-box">
+            <table className="market-table">
+              <thead>
+                <tr>
+                  <th>Vehicle Designation</th>
+                  <th>Fair Market Band</th>
+                  <th>Market Liquidity</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MARKET_BENCHMARKS.map((item, idx) => (
+                  <tr key={idx}>
+                    <td className="market-model-cell">{item.model}</td>
+                    <td className="market-price-cell">{item.range}</td>
+                    <td>
+                      <span className="market-tag-pill">{item.status}</span>
+                    </td>
+                    <td>
+                      <Link to={`/listings?make=${encodeURIComponent(item.model.split(' ')[0])}`} className="market-link">
+                        View Active Market {Icons.chevronRight}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Verification Pillars (Zero Checkmark Cliché, Structural Specs) ── */}
+      <section className="trust-standards-section">
+        <div className="container">
+          <div className="standards-banner">
+            <div className="standards-col">
+              <span className="std-num">01</span>
+              <h3 className="std-title">mParivahan RC Validation</h3>
+              <p className="std-desc">
+                Registration plate, engine number, ownership sequence, and RTO jurisdiction are cross-checked prior to publication.
+              </p>
+            </div>
+            <div className="standards-col">
+              <span className="std-num">02</span>
+              <h3 className="std-title">Authorized Workshop Records</h3>
+              <p className="std-desc">
+                Service logs, major valve-clearance intervals, recall compliance, and authorized workshop invoices are audited.
+              </p>
+            </div>
+            <div className="standards-col">
+              <span className="std-num">03</span>
+              <h3 className="std-title">Transparent Flaw Disclosures</h3>
+              <p className="std-desc">
+                Sellers are required to document all modifications and close-up photography of cosmetic or mechanical imperfections.
+              </p>
+            </div>
+            <div className="standards-col">
+              <span className="std-num">04</span>
+              <h3 className="std-title">Direct Buyer-Seller Settlement</h3>
+              <p className="std-desc">
+                Direct WhatsApp and verified telephone connection without middleman markups or brokerage fees.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Studio Footer ─────────────────────────────────────────────────── */}
+      <footer className="home-footer-root">
+        <div className="container footer-content-grid">
+          <div className="footer-col-main">
+            <div className="footer-brand-title">TORQUE<span>TRADER</span></div>
+            <p className="footer-brand-desc">
+              India's transparent marketplace for verified high-performance motorcycles. Built for enthusiasts, backed by official registration data.
+            </p>
+            <div className="footer-rto-note">
+              Operating across Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, Pune, and all Indian RTO jurisdictions.
+            </div>
+          </div>
+
+          <div className="footer-col-nav">
+            <h4 className="footer-heading">Marketplace</h4>
+            <Link to="/listings" className="footer-link">Browse Superbikes</Link>
+            <Link to="/dashboard/new" className="footer-link">mParivahan RC Tool</Link>
+            <Link to="/dashboard/new" className="footer-link">Sell Your Motorcycle</Link>
+            <Link to="/dashboard" className="footer-link">Seller Dashboard</Link>
+          </div>
+
+          <div className="footer-col-nav">
+            <h4 className="footer-heading">Legal & Compliance</h4>
+            <button type="button" className="footer-link-btn" onClick={() => setShowTerms(true)}>
+              Terms of Service
+            </button>
+            <button type="button" className="footer-link-btn" onClick={() => setShowPrivacy(true)}>
+              Privacy Policy
+            </button>
+            <span className="footer-static-note">Motor Vehicles Act, 1988 Compliance</span>
+            <span className="footer-static-note">Form 29 / 30 Transfer Guidelines</span>
+          </div>
+        </div>
+
+        <div className="container footer-bottom-bar">
+          <span>© 2026 TorqueTrader Technologies India. All rights reserved.</span>
+          <span>Zero Commission Classified Platform</span>
         </div>
       </footer>
+
+      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+      {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }

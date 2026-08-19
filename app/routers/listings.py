@@ -1,11 +1,5 @@
 """
-TorqueTrader — FastAPI router for the Inventory & Enthusiast Search endpoints.
-
-Endpoints
----------
-* ``POST   /listings/``                  — Create a new listing (seller).
-* ``GET    /listings/``                  — Public search with dynamic filters.
-* ``PATCH  /listings/{listing_id}/status`` — Admin-only status transition.
+TorqueTrader — FastAPI router for the Inventory, Enthusiast Search & mParivahan RC lookup endpoints.
 """
 
 from __future__ import annotations
@@ -17,17 +11,37 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.listing import EngineConfig, ListingStatus
-from app.schemas.listing import ListingCreate, ListingResponse, ListingStatusUpdate
+from app.schemas.listing import ListingCreate, ListingResponse, ListingStatusUpdate, RCLookupResponse
 from app.services import listing_service
-
-# ---------------------------------------------------------------------------
-# Auth dependencies (implemented by the Auth team in app.core.security).
-# get_current_user returns a User ORM object (has .id attribute).
-# require_admin is a RoleChecker([UserRole.ADMIN]) instance.
-# ---------------------------------------------------------------------------
-from app.core.security import get_current_user, require_admin  # noqa: E402
+from app.services.mparivahan import lookup_rc_details, clean_reg_number
+from app.core.security import get_current_user, require_admin
 
 router = APIRouter(prefix="/listings", tags=["Inventory"])
+
+
+# ---------------------------------------------------------------------------
+# GET /listings/rc-lookup/{reg_no} — mParivahan RC Autofill
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/rc-lookup/{reg_no}",
+    response_model=RCLookupResponse,
+    summary="mParivahan / VAHAN RC verification & bike spec autofill",
+    description=(
+        "Decodes an Indian motorcycle registration plate (e.g. MH02DW1234, DL03CY5678, KA05KJ9999) "
+        "and returns verified RTO metadata, insurance validity, ownership count, and technical specifications."
+    ),
+)
+def rc_lookup(reg_no: str) -> RCLookupResponse:
+    """Fetch verified RC metadata and superbike specs from plate number."""
+    try:
+        data = lookup_rc_details(reg_no)
+        return RCLookupResponse(**data)
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(err),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -39,12 +53,6 @@ router = APIRouter(prefix="/listings", tags=["Inventory"])
     response_model=ListingResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new superbike listing",
-    description=(
-        "Authenticated sellers submit a new listing which enters the "
-        "pipeline in **DRAFT** status regardless of the payload.  "
-        "The listing must be verified by an admin before it becomes "
-        "publicly visible."
-    ),
 )
 def create_listing(
     payload: ListingCreate,
@@ -68,40 +76,15 @@ def create_listing(
     "/",
     response_model=List[ListingResponse],
     summary="Search active superbike listings",
-    description=(
-        "Publicly accessible endpoint that surfaces only **ACTIVE** "
-        "listings.  All filter parameters are optional — omit them to "
-        "browse the full catalogue.  Results are ranked by "
-        "transparency score (desc) then recency (desc)."
-    ),
 )
 def search_listings(
-    min_price: Optional[float] = Query(
-        default=None, ge=0, description="Minimum price (inclusive)."
-    ),
-    max_price: Optional[float] = Query(
-        default=None, ge=0, description="Maximum price (inclusive)."
-    ),
-    engine_config: Optional[EngineConfig] = Query(
-        default=None, description="Filter by engine configuration."
-    ),
-    min_bhp: Optional[float] = Query(
-        default=None, ge=0, description="Minimum brake horsepower."
-    ),
-    location: Optional[str] = Query(
-        default=None,
-        max_length=200,
-        description="Case-insensitive location substring search.",
-    ),
-    skip: int = Query(
-        default=0, ge=0, description="Number of results to skip (pagination)."
-    ),
-    limit: int = Query(
-        default=20,
-        ge=1,
-        le=100,
-        description="Maximum results to return (1–100).",
-    ),
+    min_price: Optional[float] = Query(default=None, ge=0),
+    max_price: Optional[float] = Query(default=None, ge=0),
+    engine_config: Optional[EngineConfig] = Query(default=None),
+    min_bhp: Optional[float] = Query(default=None, ge=0),
+    location: Optional[str] = Query(default=None, max_length=200),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=30, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> List[ListingResponse]:
     """Execute a filtered, paginated search over active listings."""
@@ -125,11 +108,6 @@ def search_listings(
     "/{listing_id}/status",
     response_model=ListingResponse,
     summary="Update listing status (admin only)",
-    description=(
-        "Allows admins to transition a listing through its lifecycle "
-        "(e.g. DRAFT → ACTIVE, or PENDING_VERIFICATION → REJECTED) and "
-        "optionally boost its transparency score."
-    ),
 )
 def update_listing_status(
     listing_id: int,

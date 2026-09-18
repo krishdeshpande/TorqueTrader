@@ -177,6 +177,23 @@ class TestCreateListing:
         assert resp.status_code == 201
         assert resp.json()["status"] == ListingStatus.DRAFT.value
 
+    def test_create_listing_persists_extended_specs(self, db):
+        seller = _make_seller(db)
+        payload = {
+            **VALID_LISTING_PAYLOAD,
+            "reg_number": "MH02DW1234",
+            "displacement_cc": 1103,
+            "modifications": ["Slip-on exhaust"],
+        }
+        resp = client.post(
+            "/listings/",
+            json=payload,
+            headers=_auth_header(_token_for(seller)),
+        )
+        assert resp.status_code == 201
+        assert resp.json()["reg_number"] == "MH02DW1234"
+        assert resp.json()["modifications"] == ["Slip-on exhaust"]
+
     def test_create_listing_negative_price_rejected(self, db):
         """Pydantic schema must reject price <= 0."""
         seller = _make_seller(db)

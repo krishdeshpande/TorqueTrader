@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getMe, logout as apiLogout } from '../api';
+import { getMe, logout as apiLogout, updateProfile } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -30,11 +30,17 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const completeProfile = useCallback(async (profile) => {
+    const { data } = await updateProfile(profile);
+    setUser(data);
+    return data;
+  }, []);
+
   const isAdmin  = user?.role === 'admin';
   const isSeller = user?.role === 'individual_seller' || user?.role === 'dealer';
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isAdmin, isSeller }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, completeProfile, isAdmin, isSeller }}>
       {children}
     </AuthContext.Provider>
   );

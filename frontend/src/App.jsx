@@ -5,8 +5,12 @@ import Browse from './pages/Browse';
 import ListingDetail from './pages/ListingDetail';
 import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
+import ProfileOnboarding from './components/ProfileOnboarding';
+import { useAuth } from './context/AuthContext';
 
 export default function App() {
+  const { user, loading } = useAuth();
+
   return (
     <>
       <Navbar />
@@ -18,6 +22,7 @@ export default function App() {
         <Route path="/dashboard/new"  element={<CreateListing />} />
         <Route path="*"               element={<Home />} />
       </Routes>
+      {!loading && user?.profile_completed === false && <ProfileOnboarding />}
     </>
   );
 }

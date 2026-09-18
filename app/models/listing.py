@@ -25,7 +25,9 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    JSON,
     String,
+    Text,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -111,6 +113,31 @@ class Listing(Base):
 
     bhp: Mapped[float] = mapped_column(Float, nullable=False)
     location: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+
+    # Vehicle provenance and enthusiast specifications
+    reg_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    rto_state: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    ownership_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=1)
+    displacement_cc: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    torque_nm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    transmission: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    seat_height_mm: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    weight_kg: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    exhaust_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    tyre_condition_pct: Mapped[int | None] = mapped_column(Integer, nullable=True, default=85)
+    tyre_dot_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=2023)
+    chain_sprocket_health: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    keys_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=2)
+    service_history_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    insurance_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    insurance_valid_until: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    hypothecation_status: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    modifications: Mapped[list[str] | None] = mapped_column(JSON, nullable=True, default=list)
+    flaws: Mapped[list[str] | None] = mapped_column(JSON, nullable=True, default=list)
+    equipment: Mapped[list[str] | None] = mapped_column(JSON, nullable=True, default=list)
+    editorial_review: Mapped[str | None] = mapped_column(Text, nullable=True)
+    media_gallery: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True, default=list)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Lifecycle & trust
     status: Mapped[ListingStatus] = mapped_column(

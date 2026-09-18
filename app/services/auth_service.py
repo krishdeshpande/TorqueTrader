@@ -27,26 +27,16 @@ logger = logging.getLogger(__name__)
 def _send_otp_email(email: str, otp: str) -> None:
     """Send OTP via Resend."""
 
-    print("=" * 60)
-    print("!!! EMAIL SENDING DEBUG INFO !!!")
-    print("=" * 60)
-
     resend_api_key = settings.RESEND_API_KEY
     from_email = settings.OTP_FROM_EMAIL
 
-    print("RESEND_API_KEY present:", bool(resend_api_key))
-    print("OTP_FROM_EMAIL:", from_email)
-    print("Sending email to:", email)
-
     if not resend_api_key:
-        print("✗ RESEND_API_KEY is missing!")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Email service is not configured.",
         )
 
     if not from_email:
-        print("✗ OTP_FROM_EMAIL is missing!")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Email sender is not configured.",
@@ -55,7 +45,7 @@ def _send_otp_email(email: str, otp: str) -> None:
     resend.api_key = resend_api_key
 
     try:
-        result = resend.Emails.send({
+        resend.Emails.send({
             "from": f"TorqueTrader <{from_email}>",
             "to": [email],
             "subject": "Your TorqueTrader verification code",
@@ -94,16 +84,9 @@ def _send_otp_email(email: str, otp: str) -> None:
             """,
         })
 
-        print("✓ RESEND ACCEPTED EMAIL")
-        print("Resend response:", result)
-        print("=" * 60)
+        logger.info("OTP email accepted by Resend for %s", email)
 
     except Exception as exc:
-        print("✗ RESEND FAILED")
-        print("Error:", repr(exc))
-        print("Error type:", type(exc).__name__)
-        print("=" * 60)
-
         logger.exception("Resend email failed")
 
         raise HTTPException(
@@ -117,15 +100,11 @@ def _send_otp_email(email: str, otp: str) -> None:
 def send_otp(request: SendOTPRequest, redis) -> dict:
     identifier = request.email
 
-    print(f"\n>>> SEND_OTP CALLED FOR: {identifier}")
-
     # Brute-force / spam protection
     attempts_key = f"otp_attempts:{identifier}"
     attempts = redis.get(attempts_key)
 
     if attempts and int(attempts) >= settings.MAX_OTP_ATTEMPTS:
-        print(f"!!! TOO MANY ATTEMPTS FOR: {identifier}")
-
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many OTP requests. Please try again in 1 hour.",
@@ -139,11 +118,6 @@ def send_otp(request: SendOTPRequest, redis) -> dict:
         f"otp:{identifier}",
         settings.OTP_TTL_SECONDS,
         otp,
-    )
-
-    print(
-        f"Generated OTP: {otp} "
-        f"(stored in Redis for {settings.OTP_TTL_SECONDS}s)"
     )
 
     # Send email first.
@@ -184,19 +158,19 @@ def verify_otp_and_login(
     redis.delete(f"otp:{identifier}")
     redis.delete(f"otp_attempts:{identifier}")
 
-    # Get or create user.
-    # Email is currently stored in phone_number.
+    # Get or create user by email.
     user = (
         db.query(User)
-        .filter(User.phone_number == identifier)
+        .filter(User.email == identifier)
         .first()
     )
 
     if not user:
         user = User(
-            phone_number=identifier,
+            email=identifier,
             role=UserRole.buyer,
             status=UserStatus.active,
+            profile_completed=False,
         )
 
         db.add(user)
@@ -209,10 +183,10 @@ def verify_otp_and_login(
             detail="Your account has been suspended.",
         )
 
-    # Create JWT
+    # Create JWT — sub is the email (authentication identity)
     access_token = create_access_token(
         data={
-            "sub": user.phone_number,
+            "sub": user.email,
             "role": user.role.value,
         },
         expires_delta=timedelta(

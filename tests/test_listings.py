@@ -76,6 +76,7 @@ def _override_get_db():
 def _make_seller(db) -> User:
     """Insert a seller user and return it."""
     user = User(
+        email="seller@example.com",
         phone_number="+919999999999",
         role=UserRole.individual_seller,
         status=UserStatus.active,
@@ -89,6 +90,7 @@ def _make_seller(db) -> User:
 def _make_admin(db) -> User:
     """Insert an admin user and return it."""
     user = User(
+        email="admin@example.com",
         phone_number="+910000000000",
         role=UserRole.admin,
         status=UserStatus.active,
@@ -102,6 +104,7 @@ def _make_admin(db) -> User:
 def _make_buyer(db) -> User:
     """Insert a buyer user and return it."""
     user = User(
+        email="buyer@example.com",
         phone_number="+911111111111",
         role=UserRole.buyer,
         status=UserStatus.active,
@@ -114,7 +117,7 @@ def _make_buyer(db) -> User:
 
 def _token_for(user: User) -> str:
     """Generate a valid JWT for the given user."""
-    return create_access_token(data={"sub": user.phone_number, "role": user.role.value})
+    return create_access_token(data={"sub": user.email, "role": user.role.value})
 
 
 def _auth_header(token: str) -> dict:

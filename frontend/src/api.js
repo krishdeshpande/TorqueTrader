@@ -29,10 +29,11 @@ api.interceptors.response.use(
 export default api;
 
 // ── Auth ──────────────────────────────────────────────────────────────────
-export const sendOtp    = (email)       => api.post('/auth/send-otp',    { email });
-export const verifyOtp  = (email, otp)  => api.post('/auth/verify-otp',  { email, otp });
-export const getMe      = ()            => api.get('/auth/me');
-export const logout     = ()            => api.post('/auth/logout');
+export const sendOtp        = (email)       => api.post('/auth/send-otp',    { email });
+export const verifyOtp      = (email, otp)  => api.post('/auth/verify-otp',  { email, otp });
+export const getMe          = ()            => api.get('/auth/me');
+export const logout         = ()            => api.post('/auth/logout');
+export const updateProfile  = (data)        => api.put('/auth/profile', data);
 
 // ── mParivahan / RC Lookup ────────────────────────────────────────────────
 export const rcLookup = async (regNo) => {

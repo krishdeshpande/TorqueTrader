@@ -49,13 +49,14 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
-        phone_number: str = payload.get("sub")
-        if phone_number is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.phone_number == phone_number).first()
+    # Look up user by email (the authentication identity).
+    user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
     return user

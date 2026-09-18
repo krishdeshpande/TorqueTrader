@@ -39,11 +39,7 @@ export default function AuthModal({ onClose }) {
       setCountdown(45);
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err) {
-      // In offline / mock mode allow demo OTP
-      setStep('otp');
-      setCountdown(45);
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
-      toast.info('Verification code generated. (Check Render log or enter any 6 digits for testing).');
+      toast.error(err.response?.data?.detail || 'We could not send a verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -81,20 +77,15 @@ export default function AuthModal({ onClose }) {
     setLoading(true);
     try {
       const { data } = await verifyOtp(email, code);
-      let userData = { id: 1, email, role: 'seller' };
-      try {
-        const meRes = await getMe();
-        userData = meRes.data;
-      } catch (_) {}
+      // getMe uses the Axios interceptor, which reads the token from storage.
+      localStorage.setItem('tt_token', data.access_token);
+      const { data: userData } = await getMe();
       login(data.access_token, userData);
       toast.success('Successfully authenticated.');
       onClose();
     } catch (err) {
-      // Fallback mock login for demo reliability
-      const demoToken = 'mock_jwt_token_' + Date.now();
-      login(demoToken, { id: 101, email, role: 'seller' });
-      toast.success('Logged in as verified seller.');
-      onClose();
+      localStorage.removeItem('tt_token');
+      toast.error(err.response?.data?.detail || 'That verification code is invalid or has expired.');
     } finally {
       setLoading(false);
     }

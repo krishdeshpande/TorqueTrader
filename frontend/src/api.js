@@ -1,8 +1,15 @@
 import axios from 'axios';
 import { SEED_LISTINGS } from './data/seedListings';
 
+const isDevelopment = import.meta.env.DEV;
+const apiBaseUrl = import.meta.env.VITE_API_URL || (isDevelopment ? 'http://localhost:8000' : '');
+
+if (!apiBaseUrl) {
+  throw new Error('VITE_API_URL must be configured for a production frontend build.');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://torquetrader.onrender.com',
+  baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 });
@@ -42,6 +49,7 @@ export const rcLookup = async (regNo) => {
     const res = await api.get(`/listings/rc-lookup/${clean}`);
     return res.data;
   } catch (err) {
+    if (!isDevelopment) throw err;
     // Client-side fallback decoder for offline / cold-start reliability
     const stateCode = clean.slice(0, 2);
     const RTO_MAP = {
@@ -94,13 +102,14 @@ export const rcLookup = async (regNo) => {
 export const getListings = async (params = {}) => {
   try {
     const res = await api.get('/listings/', { params });
+    if (!isDevelopment) return res;
     if (res.data && res.data.length > 0) {
       // Merge local user-created listings if present
       const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
       return { data: [...local, ...res.data] };
     }
   } catch (err) {
-    // console.info('Backend sleeping or cold starting, serving verified catalog.');
+    if (!isDevelopment) throw err;
   }
 
   // Filter seed listings based on query parameters
@@ -138,6 +147,7 @@ export const createListing = async (data) => {
     const res = await api.post('/listings/', data);
     return res;
   } catch (err) {
+    if (!isDevelopment) throw err;
     // Save to local cache so user's listing immediately exists on frontend
     const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
     const newEntry = {

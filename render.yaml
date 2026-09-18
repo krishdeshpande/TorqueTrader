@@ -3,8 +3,10 @@ services:
     name: torquetrader-api
     runtime: python
     buildCommand: "pip install -r backend-requirements.txt"
-    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: JWT_SECRET_KEY
         generateValue: true          # Render auto-generates a secret
       - key: DATABASE_URL
@@ -16,7 +18,7 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: OTP_FROM_EMAIL
-        value: noreply@torquetrader.in
+        sync: false
       - key: R2_ACCOUNT_ID
         sync: false
       - key: R2_ACCESS_KEY_ID
@@ -28,7 +30,7 @@ services:
       - key: R2_PRIVATE_BUCKET
         value: torquetrader-private
       - key: ALLOWED_ORIGINS
-        value: "*"                   # Update to your frontend domain before launch
+        sync: false                   # Set to the exact Vercel frontend origin(s)
     healthCheckPath: /health
 
 databases:

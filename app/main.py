@@ -10,9 +10,10 @@ from app.models.base import Base
 import app.models  # noqa: F401 — registers all ORM models so Base.metadata is complete
 from app.routers import auth, media, leads, listings
 
-# ── Create tables (SQLite dev / first-run only) ───────────────────────────────
-# In production, run: alembic upgrade head
-Base.metadata.create_all(bind=engine)
+# ── Create tables for local development only ──────────────────────────────────
+# Production schema changes are applied by Alembic before the web process starts.
+if settings.ENVIRONMENT != "production":
+    Base.metadata.create_all(bind=engine)
 
 # ── Rate limiter ──────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)

@@ -26,10 +26,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # ``Base.metadata.create_all`` is used for a first local run, so a fresh
-    # database may already have the current users table when this migration is
-    # run. This migration only transforms the legacy phone-as-email schema.
+    # Establish missing tables for a fresh deployment. Existing tables are not
+    # modified by create_all; the operations below migrate the legacy users
+    # table explicitly.
     bind = op.get_bind()
+    from app.models.base import Base
+    import app.models  # noqa: F401 — register all tables on Base.metadata
+
+    Base.metadata.create_all(bind=bind)
     inspector = sa.inspect(bind)
     if not inspector.has_table('users'):
         return

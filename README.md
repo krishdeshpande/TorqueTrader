@@ -64,20 +64,22 @@ pytest tests/ -v
 | `R2_ACCOUNT_ID` | Cloudflare dashboard → R2 |
 | `R2_ACCESS_KEY_ID` | Cloudflare R2 → Manage API Tokens |
 | `R2_SECRET_ACCESS_KEY` | Same as above |
+| `ALLOWED_ORIGINS` | Exact HTTPS Vercel frontend URL(s), comma-separated |
 
-6. After deploy, run the database migration:
-```bash
-# In Render dashboard → Shell tab:
-alembic upgrade head
-```
+`render.yaml` sets `ENVIRONMENT=production` and runs `alembic upgrade head`
+before starting the API. The application will refuse to start if its database,
+JWT, Redis, Resend, R2, or explicit CORS configuration is missing.
+
+6. In Vercel, set `VITE_API_URL` in the **Production** environment to your
+Render API's HTTPS URL, then deploy the frontend. See
+[`frontend/.env.example`](frontend/.env.example).
 
 ### Upgrading the database schema after changes
 ```bash
 # Generate a new migration
 alembic revision --autogenerate -m "describe your change"
 
-# Apply to production (run in Render shell)
-alembic upgrade head
+# The next Render deploy applies migrations before starting the web process.
 ```
 
 ---

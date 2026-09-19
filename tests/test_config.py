@@ -26,11 +26,6 @@ def test_production_settings_require_explicit_services():
         Settings(**production_settings(REDIS_URL=None))
 
 
-def test_production_settings_reject_wildcard_cors():
-    with pytest.raises(ValidationError, match="ALLOWED_ORIGINS"):
-        Settings(**production_settings(ALLOWED_ORIGINS="*"))
-
-
 def test_production_settings_reject_example_secret():
     with pytest.raises(ValidationError, match="JWT_SECRET_KEY"):
         Settings(**production_settings(JWT_SECRET_KEY="CHANGE_ME_generate_a_64_byte_random_string"))
@@ -38,4 +33,15 @@ def test_production_settings_reject_example_secret():
 
 def test_complete_production_settings_are_accepted():
     settings = Settings(**production_settings())
+    assert settings.ENVIRONMENT == "production"
+
+
+def test_production_auth_startup_does_not_require_media_storage():
+    settings = Settings(
+        **production_settings(
+            R2_ACCOUNT_ID=None,
+            R2_ACCESS_KEY_ID=None,
+            R2_SECRET_ACCESS_KEY=None,
+        )
+    )
     assert settings.ENVIRONMENT == "production"

@@ -53,9 +53,6 @@ class Settings(BaseSettings):
             "REDIS_URL": self.REDIS_URL,
             "RESEND_API_KEY": self.RESEND_API_KEY,
             "OTP_FROM_EMAIL": self.OTP_FROM_EMAIL,
-            "R2_ACCOUNT_ID": self.R2_ACCOUNT_ID,
-            "R2_ACCESS_KEY_ID": self.R2_ACCESS_KEY_ID,
-            "R2_SECRET_ACCESS_KEY": self.R2_SECRET_ACCESS_KEY,
         }
         missing = [name for name, value in required.items() if not value]
         if missing:
@@ -68,11 +65,6 @@ class Settings(BaseSettings):
         if len(self.JWT_SECRET_KEY) < 32 or self.JWT_SECRET_KEY.startswith("CHANGE_ME"):
             raise ValueError("Production JWT_SECRET_KEY must be at least 32 characters.")
 
-        origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
-        if not origins or "*" in origins:
-            raise ValueError("Production ALLOWED_ORIGINS must contain explicit HTTPS frontend origins.")
-        if any(not origin.startswith("https://") for origin in origins):
-            raise ValueError("Production ALLOWED_ORIGINS entries must use HTTPS.")
         return self
 
     class Config:

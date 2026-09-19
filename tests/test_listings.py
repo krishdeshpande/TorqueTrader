@@ -140,6 +140,12 @@ VALID_LISTING_PAYLOAD = {
     "location": "Mumbai, Maharashtra",
 }
 
+
+def test_listing_enums_persist_api_values():
+    assert Listing.__table__.c.status.type.enums == [status.value for status in ListingStatus]
+    assert Listing.__table__.c.engine_config.type.enums == [config.value for config in EngineConfig]
+    assert Listing.__table__.c.body_type.type.enums == [body_type.value for body_type in BodyType]
+
 client = TestClient(app)
 
 

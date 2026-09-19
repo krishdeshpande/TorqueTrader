@@ -2,7 +2,7 @@
 
 A transparency-focused C2C marketplace backend for premium superbikes.
 
-**Stack:** FastAPI · SQLAlchemy · PostgreSQL · Redis · Cloudflare R2 · Resend Email OTP
+**Stack:** FastAPI · SQLAlchemy · Supabase PostgreSQL · Redis · Resend Email OTP
 
 ---
 
@@ -53,7 +53,9 @@ pytest tests/ -v
 1. Fork this repo to your GitHub account
 2. Go to [render.com](https://render.com) → New → Blueprint
 3. Connect your forked repo — Render reads `render.yaml` automatically
-4. Render will create: Web Service + PostgreSQL database
+4. Render creates the Web Service. Configure its `DATABASE_URL` manually with
+   the existing Supabase PostgreSQL connection string; this repository does not
+   create or manage a Render database.
 5. Set the following env vars manually in the Render dashboard:
 
 | Variable | Where to get it |
@@ -61,14 +63,10 @@ pytest tests/ -v
 | `REDIS_URL` | [Upstash](https://upstash.com) — free Redis, copy the Redis URL |
 | `RESEND_API_KEY` | [Resend](https://resend.com) — free, 3K emails/month |
 | `OTP_FROM_EMAIL` | Your verified sender domain in Resend |
-| `R2_ACCOUNT_ID` | Cloudflare dashboard → R2 |
-| `R2_ACCESS_KEY_ID` | Cloudflare R2 → Manage API Tokens |
-| `R2_SECRET_ACCESS_KEY` | Same as above |
-| `ALLOWED_ORIGINS` | Exact HTTPS Vercel frontend URL(s), comma-separated |
 
-`render.yaml` sets `ENVIRONMENT=production` and runs `alembic upgrade head`
-before starting the API. The application will refuse to start if its database,
-JWT, Redis, Resend, R2, or explicit CORS configuration is missing.
+`render.yaml` sets `ENVIRONMENT=production`. It intentionally does not run
+database migrations automatically. Review and run only approved, data-safe
+migrations against Supabase using your normal production change process.
 
 6. In Vercel, set `VITE_API_URL` in the **Production** environment to your
 Render API's HTTPS URL, then deploy the frontend. See
@@ -79,7 +77,8 @@ Render API's HTTPS URL, then deploy the frontend. See
 # Generate a new migration
 alembic revision --autogenerate -m "describe your change"
 
-# The next Render deploy applies migrations before starting the web process.
+# Run only after reviewing the migration against the target Supabase schema.
+alembic upgrade head
 ```
 
 ---

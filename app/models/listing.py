@@ -70,6 +70,11 @@ class BodyType(str, enum.Enum):
     MODERN_CLASSIC = "Modern Classic"
 
 
+def _enum_values(enum_type: type[enum.Enum]) -> list[str]:
+    """Persist enum values (for example, ``draft``), never member names."""
+    return [member.value for member in enum_type]
+
+
 # ---------------------------------------------------------------------------
 # Listing table
 # ---------------------------------------------------------------------------
@@ -103,11 +108,21 @@ class Listing(Base):
     odometer: Mapped[int] = mapped_column(Integer, nullable=False)
 
     engine_config: Mapped[EngineConfig] = mapped_column(
-        Enum(EngineConfig, name="engine_config_enum", native_enum=True),
+        Enum(
+            EngineConfig,
+            name="engine_config_enum",
+            native_enum=True,
+            values_callable=_enum_values,
+        ),
         nullable=False,
     )
     body_type: Mapped[BodyType] = mapped_column(
-        Enum(BodyType, name="body_type_enum", native_enum=True),
+        Enum(
+            BodyType,
+            name="body_type_enum",
+            native_enum=True,
+            values_callable=_enum_values,
+        ),
         nullable=False,
     )
 
@@ -141,7 +156,12 @@ class Listing(Base):
 
     # Lifecycle & trust
     status: Mapped[ListingStatus] = mapped_column(
-        Enum(ListingStatus, name="listing_status_enum", native_enum=True),
+        Enum(
+            ListingStatus,
+            name="listing_status_enum",
+            native_enum=True,
+            values_callable=_enum_values,
+        ),
         nullable=False,
         default=ListingStatus.DRAFT,
         server_default=ListingStatus.DRAFT.value,

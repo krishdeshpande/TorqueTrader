@@ -3,16 +3,14 @@ services:
     name: torquetrader-api
     runtime: python
     buildCommand: "pip install -r backend-requirements.txt"
-    startCommand: "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: ENVIRONMENT
         value: production
       - key: JWT_SECRET_KEY
         generateValue: true          # Render auto-generates a secret
       - key: DATABASE_URL
-        fromDatabase:
-          name: torquetrader-db
-          property: connectionString
+        sync: false                  # Existing Supabase PostgreSQL connection string
       - key: REDIS_URL
         sync: false                  # Set manually in Render dashboard
       - key: RESEND_API_KEY
@@ -29,12 +27,4 @@ services:
         value: torquetrader-public
       - key: R2_PRIVATE_BUCKET
         value: torquetrader-private
-      - key: ALLOWED_ORIGINS
-        sync: false                   # Set to the exact Vercel frontend origin(s)
     healthCheckPath: /health
-
-databases:
-  - name: torquetrader-db
-    databaseName: torquetrader
-    user: torquetrader
-    plan: free

@@ -8,7 +8,11 @@ class SendOTPRequest(BaseModel):
 
 class VerifyOTPRequest(BaseModel):
     email: EmailStr = Field(..., description="Email address the OTP was sent to.")
-    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code.")
+    otp: str = Field(
+        ...,
+        pattern=r"^\d{6}$",
+        description="Exactly six numeric digits.",
+    )
 
 
 class TokenResponse(BaseModel):

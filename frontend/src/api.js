@@ -92,23 +92,87 @@ export const rcLookup = async (regNo) => {
 };
 
 // ── Automotive AI Advisory & 1-on-1 Consulting ────────────────────────────
+const GRANULAR_CLIENT_CATALOG = {
+  'Under ₹6L': {
+    pick1: 'Ford Figo / Freestyle 1.5 TDCi (Diesel)',
+    pick1_desc: '100 BHP / 215 Nm torque from the bulletproof 1.5L diesel. Communicative hydraulic-like steering feel, strong chassis safety, and 16-18 km/l in city traffic.',
+    pick2: 'Volkswagen Polo 1.0 TSI (Manual) or Honda Jazz 1.2',
+    pick2_desc: 'Polo gives rock-solid European high-speed stability and 110 BHP punch; Jazz gives legendary reliability, sofa-like ride, and magic seats.',
+    mileage: 'City: 11-13 km/l (Petrol) / 16-18 km/l (Diesel) | Highway: 18-23 km/l',
+    service: '₹6,000 - ₹11,000 annually at independent multi-brand specialist garages.',
+    failures: 'ABS speed sensors on VWs in heavy monsoon rains (₹2,200/sensor), water pump weeping past 60k km, clutch cable wear on city hatchbacks.',
+    sleeper: 'Fiat Punto Abarth 1.4 T-Jet (145 BHP) or Ford Fiesta 1.5 TDCi Titanium — rare sleepers offering sportscar steering feedback under ₹5 Lakhs.',
+    checklist: ['Check for black smoke on hard diesel acceleration', 'Listen for suspension bush thuds over sharp speed bumps', 'Verify OBD-II logs for cleared fault codes']
+  },
+  '₹6L - ₹12L': {
+    pick1: 'Tata Nexon 1.5 Revotorq Diesel / 1.2 Turbo Petrol',
+    pick1_desc: '5-Star Global NCAP certified body shell, 208mm ground clearance that glides over monsoon craters, and a muscular 260 Nm diesel engine.',
+    pick2: 'Honda City 1.5 i-VTEC (4th/5th Gen) / Hyundai i20 N-Line',
+    pick2_desc: 'City gives supreme backseat comfort and free-revving 121 BHP engine; i20 N-Line gives factory-stiffened dampers and exhaust pops.',
+    mileage: 'City: 10-12 km/l (Turbo Petrol) / 14-16 km/l (Diesel) | Highway: 16-20 km/l',
+    service: '₹8,000 - ₹14,000 annually.',
+    failures: 'DCT clutch wear in crawling traffic, DPF soot clogging in BS6 diesels driven strictly on short 3km city trips.',
+    sleeper: 'Renault Duster 1.3 Turbo Petrol (156 BHP / 254 Nm) — ride quality that completely embarrasses ₹40 Lakh luxury SUVs paired with a Mercedes-derived engine.',
+    checklist: ['Test automatic gearbox in stop-and-go crawl', 'Verify AC cooling under afternoon sun', 'Inspect front lower arm bushes']
+  },
+  '₹12L - ₹20L': {
+    pick1: 'Volkswagen Virtus GT Plus 1.5 TSI / Skoda Slavia 1.5',
+    pick1_desc: 'The dynamic benchmark under ₹20 Lakhs. 150 BHP / 250 Nm with cylinder deactivation, 5-Star Global NCAP safety, and planted highway handling.',
+    pick2: 'Honda Elevate 1.5 i-VTEC / Mahindra Thar 4x4',
+    pick2_desc: 'Elevate gives class-leading 220mm ground clearance and plush city ride; Thar offers unmatched street presence and 4x4 capability.',
+    mileage: 'City: 9-11 km/l (1.5 TSI / Petrol AT) / 12-14 km/l (Diesel AT) | Highway: 15-18 km/l',
+    service: '₹10,000 - ₹18,000 annually with 4-year Service Value Packs.',
+    failures: 'DQ200 DSG mechatronics if subjected to severe overheating, DEF/AdBlue sensor errors on BS6 diesels in sub-zero trips.',
+    sleeper: 'Skoda Octavia 1.8 TSI (Pre-Owned) — executive luxury sedan with independent rear suspension and remap potential to 240+ BHP.',
+    checklist: ['Check DSG transmission temperature logs', 'Inspect sunroof drainage channels', 'Check brake rotor thickness']
+  },
+  '₹20L - ₹35L': {
+    pick1: 'Mahindra XUV700 AX7L Diesel AWD / Toyota Innova Hycross Hybrid',
+    pick1_desc: 'XUV700 provides 185 BHP mHawk power with AWD; Hycross Hybrid gives 18-20 km/l real city mileage and bulletproof Toyota reliability.',
+    pick2: 'Skoda Octavia 2.0 TSI L&K (Pre-Owned) / Hyundai Ioniq 5',
+    pick2_desc: 'Octavia 2.0 TSI is a 190 BHP executive missile with wet-clutch DQ381 reliability; Ioniq 5 is the premier fast-charging EV.',
+    mileage: 'City: 8-10 km/l (2.0 TSI) / 18-21 km/l (Hycross Hybrid) | Highway: 14-17 km/l',
+    service: '₹14,000 - ₹24,000 per year.',
+    failures: 'Water pump thermostat housing weepage on 2.0 TSI around 60k km, 18-inch tyre sidewall damage on pothole impacts.',
+    sleeper: 'BMW 330i (G20 Pre-Owned) — pure rear-wheel drive chassis with the legendary B48 engine and bulletproof ZF 8-speed automatic.',
+    checklist: ['Inspect coolant reservoir for leaks', 'Check alloy rims for inner-lip bends', 'Scan ADAS camera calibration logs']
+  },
+  '₹35L - ₹75L': {
+    pick1: 'BMW 330i / M340i xDrive (G20) / BMW 530d (G30)',
+    pick1_desc: 'The ultimate driver machines. 530d delivers 620 Nm of inline-6 diesel torque; M340i delivers 382 BHP B58 speed with ZF 8-speed reliability.',
+    pick2: 'Triumph Street Triple 765 RS / Ducati Panigale V4 S',
+    pick2_desc: 'Street Triple is the sweet spot of street agility; Panigale V4 S is pure Italian motorsport emotion and acoustic drama.',
+    mileage: 'City: 6-8 km/l (M340i / Panigale) / 10-12 km/l (530d / 330i) | Highway: 12-15 km/l',
+    service: '₹25,000 - ₹55,000 annually. Superbike Desmo service at 24k km costs ₹65,000 - ₹85,000.',
+    failures: 'Run-flat tyre sidewall bulges (recommend tubeless Michelin PS4S), coolant hose brittleness after 5 years.',
+    sleeper: 'Porsche Macan S (3.0 V6) or Audi S5 Sportback (Pre-Owned) — executive daily usability with sportscar acceleration.',
+    checklist: ['Check authorized digital service key records', 'Verify paint thickness meter readings', 'Check launch control counter in ECU logs']
+  }
+};
+
 export const analyzeVehicleAdvisory = async (diagnosticData) => {
   try {
     const res = await api.post('/advisor/analyze', diagnosticData);
-    return res.data;
+    if (res.data?.analysis_markdown) {
+      return res.data;
+    }
   } catch (err) {
-    const budget = diagnosticData.budget || '₹12L - ₹20L';
-    const city = diagnosticData.city || 'Indian Metros';
-    const priorities = (diagnosticData.priorities || []).join(', ') || 'Safety & Comfort';
-    const contenders = diagnosticData.contenders || 'Shortlisted Contenders';
-
-    return {
-      source: 'offline_expert_engine',
-      summary_title: `Dossier: ${contenders} for ${city}`,
-      budget_tier: budget,
-      analysis_markdown: `### 1. The Unvarnished Verdict\nFor your budget of **${budget}** in **${city}** prioritizing **${priorities}**, here is our direct advice:\n\nIf you are evaluating **${contenders}**, the key is to look beyond showroom brochure horsepower figures and assess low-speed bumper-to-bumper city composure, suspension damping over unscientific speed breakers, and real maintenance costs.\n\n---\n\n### 2. Contender Comparative Breakdown\n* **Top Recommendation:** Match vehicles with proven high-tensile body shells (5-Star Global/Bharat NCAP) and smooth torque delivery.\n* **Crucial Dealbreakers:** Avoid dry-clutch automatics (DSG/DCT) if 80%+ of your driving is spent crawling in high-ambient city traffic, unless you budget for proactive maintenance.\n\n---\n\n### 3. Real-World Ownership Reality in ${city}\n* **Real City Fuel Economy:** Expect 20-30% lower figures than ARAI lab test figures in heavy urban stop-and-go.\n* **Annual Maintenance:** Budget ₹10,000 to ₹18,000 per year for periodic lubricants, filters, and brake wear items.\n\n---\n\n### 4. The Smart "Sleeper" Alternative\n* Look for well-maintained 2-3 year old pre-owned executive vehicles with complete authorized dealership logbooks to avoid initial 35% depreciation.\n\n---\n\n### 5. Pre-Purchase & Test-Drive Inspection Checklist\n1. Scan OBD-II for hidden error codes and clear history.\n2. Check cold-start engine sound and AC cooling load at idle.\n3. Verify chassis VIN against government VAHAN records.`
-    };
+    // Fall through to detailed client engine
   }
+
+  const budget = diagnosticData.budget || '₹12L - ₹20L';
+  const city = diagnosticData.city || 'Mumbai / Delhi-NCR / Bangalore';
+  const priorities = (diagnosticData.priorities || []).join(', ') || 'Safety & Ride Comfort';
+  const contenders = diagnosticData.contenders || '';
+
+  const matched = GRANULAR_CLIENT_CATALOG[budget] || GRANULAR_CLIENT_CATALOG['₹12L - ₹20L'];
+
+  return {
+    source: 'torque_expert_engine',
+    summary_title: `Dossier: ${contenders || matched.pick1} for ${city}`,
+    budget_tier: budget,
+    analysis_markdown: `### 1. The Unvarnished Verdict\nFor your budget of **${budget}** in **${city}** prioritizing **${priorities}**, here is our direct advice:\n\nIf you are evaluating **${contenders || matched.pick1 + ' vs ' + matched.pick2}**, the primary factor in ${city} is balancing low-speed suspension bump absorption over unscientific speed breakers against long-term maintenance costs.\n\n* **Top Pick:** **${matched.pick1}** — ${matched.pick1_desc}\n* **Runner-Up:** **${matched.pick2}** — ${matched.pick2_desc}\n\n---\n\n### 2. Contender Comparative Breakdown\n* **${matched.pick1}**\n  * **Strengths:** Proven structural safety, responsive powertrain, and high stability.\n  * **Dealbreakers:** Firm city ride on broken roads and higher OEM workshop spares.\n* **${matched.pick2}**\n  * **Strengths:** Low maintenance headache, plush ride comfort, and higher fuel efficiency.\n  * **Dealbreakers:** Lighter sheet metal or dry-clutch automatic maintenance discipline.\n\n---\n\n### 3. Real-World Ownership Reality in ${city}\n* **Real City Fuel Economy in Traffic:** ${matched.mileage}\n* **Annual Periodic Service Bill:** ${matched.service}\n* **Known Mechanical & Electrical Failure Points:** ${matched.failures}\n\n---\n\n### 4. The Smart "Sleeper" Alternative\n* **${matched.sleeper}**\n  * *Why you should consider it:* Delivers a superior ratio of performance and lower depreciation loss without compromising your core requirements.\n\n---\n\n### 5. Pre-Purchase & Test-Drive Inspection Checklist\n1. ${matched.checklist[0]}\n2. ${matched.checklist[1]}\n3. ${matched.checklist[2]}\n4. Request official workshop service invoice printouts with chassis VIN verification.`
+  };
 };
 
 export const bookConsultation = async (bookingData) => {

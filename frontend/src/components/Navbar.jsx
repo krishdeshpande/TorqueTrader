@@ -24,13 +24,13 @@ export default function Navbar() {
         <div className="navbar-top-ticker">
           <div className="container ticker-inner">
             <span className="ticker-item">
-              <span className="ticker-bullet">•</span> India's Verified High-Performance Superbike Marketplace
+              <span className="ticker-bullet">•</span> India's Verified Marketplace & Independent Auto Advisory
             </span>
             <span className="ticker-item hide-mobile">
-              <span className="ticker-bullet">•</span> mParivahan RC Verification Enabled
+              <span className="ticker-bullet">•</span> Full-Spectrum Consulting (Cars & Superbikes)
             </span>
             <span className="ticker-item hide-mobile">
-              <span className="ticker-bullet">•</span> Direct Buyer-Seller Connect
+              <span className="ticker-bullet">•</span> 100% Unbiased · Zero Dealer Kickbacks
             </span>
           </div>
         </div>
@@ -41,13 +41,19 @@ export default function Navbar() {
             {/* Logo */}
             <Link to="/" className="navbar-brand" onClick={() => setMobileOpen(false)}>
               <span className="brand-logo-text">TORQUE<span className="brand-accent">TRADER</span></span>
-              <span className="brand-tagline">VERIFIED SUPERBIKES</span>
+              <span className="brand-tagline">AUTOMOTIVE ADVISORY & MARKETPLACE</span>
             </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="navbar-links">
               <NavLink to="/listings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 Browse Superbikes
+              </NavLink>
+              <NavLink to="/advisor" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                Auto Advisory
+              </NavLink>
+              <NavLink to="/consulting" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                1-on-1 Consulting
               </NavLink>
               <NavLink to="/dashboard/new" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 Sell a Bike
@@ -61,15 +67,15 @@ export default function Navbar() {
 
             {/* Right Action Area */}
             <div className="navbar-actions">
-              <Link to="/dashboard/new" className="btn btn-secondary btn-sm hide-mobile">
-                {Icons.plus} List Your Superbike
+              <Link to="/consulting" className="btn btn-secondary btn-sm hide-mobile">
+                Book Consultation
               </Link>
 
               {user ? (
                 <div className="user-profile-menu">
                   <span className="user-email-chip">
                     <span className="user-avatar-initial">{user.email ? user.email[0].toUpperCase() : 'U'}</span>
-                    <span className="user-email-text">{user.email ? user.email.split('@')[0] : 'Seller'}</span>
+                    <span className="user-email-text">{user.email ? user.email.split('@')[0] : 'User'}</span>
                   </span>
                   <button className="btn btn-ghost btn-sm" onClick={handleLogout} title="Sign Out">
                     Sign Out
@@ -103,6 +109,12 @@ export default function Navbar() {
             <div className="container mobile-nav-inner">
               <NavLink to="/listings" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Browse Superbikes
+              </NavLink>
+              <NavLink to="/advisor" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
+                Auto Advisory (AI Intelligence)
+              </NavLink>
+              <NavLink to="/consulting" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
+                1-on-1 Personalized Consulting
               </NavLink>
               <NavLink to="/dashboard/new" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Sell a Bike (mParivahan Autofill)

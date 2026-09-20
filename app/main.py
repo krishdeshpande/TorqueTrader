@@ -8,7 +8,7 @@ from app.config import settings
 from app.database import engine
 from app.models.base import Base
 import app.models  # noqa: F401 — registers all ORM models so Base.metadata is complete
-from app.routers import auth, media, leads, listings
+from app.routers import auth, media, leads, listings, advisor
 
 # ── Create tables for local development only ──────────────────────────────────
 # Production schema changes are applied by Alembic before the web process starts.
@@ -57,6 +57,7 @@ app.include_router(auth.router)
 app.include_router(media.router)
 app.include_router(leads.router)
 app.include_router(listings.router)
+app.include_router(advisor.router)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

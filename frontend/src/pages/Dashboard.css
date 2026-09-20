@@ -152,9 +152,112 @@
   color: var(--text-muted);
 }
 
+/* Consultation Leads Specifics */
+.consult-leads-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.consult-lead-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lead-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.lead-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.lead-client-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.lead-ref-code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.lead-fee-badge {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  background: var(--green-light);
+  border: 1px solid #BBF7D0;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.lead-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.lead-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.detail-k {
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.detail-v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: right;
+  word-break: break-word;
+}
+
+.detail-v.highlight-wa {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
+.lead-card-actions {
+  margin-top: auto;
+}
+
 @media (max-width: 900px) {
   .dash-stats-row { grid-template-columns: repeat(2, 1fr); }
   .dash-listings-grid { grid-template-columns: repeat(2, 1fr); }
+  .consult-leads-grid { grid-template-columns: 1fr; }
   .dash-top-inner { flex-direction: column; align-items: flex-start; }
 }
 

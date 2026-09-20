@@ -42,13 +42,15 @@ export default function ConsultingBookingModal({ tier, onClose }) {
       });
 
       setConfirmed(res);
-      toast.success('Consultation session booked successfully!');
+      toast.success('Consultation request recorded! Complete your UPI payment below.');
     } catch (err) {
       toast.error('Could not complete booking. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -72,22 +74,40 @@ export default function ConsultingBookingModal({ tier, onClose }) {
           {confirmed ? (
             <div className="booking-confirmed-box">
               <div className="confirmed-icon">{Icons.shield}</div>
-              <h3 className="confirmed-title">Consultation Confirmed</h3>
-              <p className="confirmed-booking-id">Booking Ref: {confirmed.booking_id}</p>
-              <p className="confirmed-desc">{confirmed.message}</p>
-              <div className="confirmed-meta-card">
-                <div className="meta-row">
-                  <span className="meta-k">Consultation Tier:</span>
-                  <span className="meta-v">{confirmed.tier_title}</span>
-                </div>
-                <div className="meta-row">
-                  <span className="meta-k">Client:</span>
-                  <span className="meta-v">{confirmed.client_name} ({phone})</span>
-                </div>
+              <h3 className="confirmed-title">Booking Reserved: {confirmed.booking_id}</h3>
+              <p className="confirmed-desc">
+                Your consultation request has been forwarded to our lead consultant. To finalize your reserved slot, please complete the consultation fee via UPI below:
+              </p>
+
+              {/* UPI Payment Instructions Card */}
+              <div className="confirmed-meta-card" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 18 }}>
                 <div className="meta-row">
                   <span className="meta-k">Consulting Fee:</span>
-                  <span className="meta-v highlight">Rs {confirmed.tier_price.toLocaleString('en-IN')}</span>
+                  <span className="meta-v highlight" style={{ fontSize: '1.1rem' }}>Rs {confirmed.tier_price.toLocaleString('en-IN')}</span>
                 </div>
+                <div className="meta-row">
+                  <span className="meta-k">UPI ID for Payment:</span>
+                  <span className="meta-v" style={{ color: '#0F172A', userSelect: 'all', background: '#E2E8F0', padding: '2px 6px', borderRadius: 3 }}>
+                    deshpandekrish23@okaxis
+                  </span>
+                </div>
+                <div className="meta-row">
+                  <span className="meta-k">Accepted Apps:</span>
+                  <span className="meta-v" style={{ fontSize: '0.78rem' }}>GPay / PhonePe / Paytm / CRED / BHIM</span>
+                </div>
+              </div>
+
+              {/* WhatsApp Action */}
+              <div style={{ marginTop: 20 }}>
+                <a
+                  href={`https://wa.me/918080857485?text=Hi%20Krish,%20I%20have%20booked%20the%20${encodeURIComponent(confirmed.tier_title)}%20(Ref:%20${confirmed.booking_id})%20for%20Rs%20${confirmed.tier_price}.%20Sharing%20my%20payment%20details.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ width: '100%', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                >
+                  Confirm & Share on WhatsApp
+                </a>
               </div>
             </div>
           ) : (
@@ -179,7 +199,7 @@ export default function ConsultingBookingModal({ tier, onClose }) {
                 style={{ width: '100%', height: 48, marginTop: 4 }}
                 disabled={loading}
               >
-                {loading ? 'Confirming Session...' : `Book Consultation (Rs ${selectedTier.price.toLocaleString('en-IN')})`}
+                {loading ? 'Submitting Request...' : `Proceed to Book (Rs ${selectedTier.price.toLocaleString('en-IN')})`}
               </button>
             </form>
           )}
@@ -187,7 +207,7 @@ export default function ConsultingBookingModal({ tier, onClose }) {
 
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>
-            {confirmed ? 'Done' : 'Cancel'}
+            {confirmed ? 'Close' : 'Cancel'}
           </button>
         </div>
       </div>

@@ -176,19 +176,44 @@ export const analyzeVehicleAdvisory = async (diagnosticData) => {
 };
 
 export const bookConsultation = async (bookingData) => {
+  // Save locally first so client always sees their bookings
+  const local = JSON.parse(localStorage.getItem('tt_consultation_leads') || '[]');
+  const newLead = {
+    ...bookingData,
+    id: Date.now(),
+    booking_ref: `TT-CONSULT-${Date.now()}`,
+    status: 'pending',
+    payment_status: 'pending',
+    created_at: new Date().toISOString()
+  };
+  local.unshift(newLead);
+  localStorage.setItem('tt_consultation_leads', JSON.stringify(local));
+
   try {
     const res = await api.post('/advisor/consultation-booking', bookingData);
     return res.data;
   } catch (err) {
     return {
       success: true,
-      booking_id: `TT-LOCAL-${Date.now()}`,
+      booking_id: newLead.booking_ref,
       client_name: bookingData.client_name,
       tier_title: bookingData.tier_title,
       tier_price: bookingData.tier_price,
       message: `Consultation request confirmed. Our lead automotive consultant will reach out on WhatsApp/Email (${bookingData.client_phone}) within 2 hours to confirm your session slot.`,
     };
   }
+};
+
+export const getConsultations = async () => {
+  try {
+    const res = await api.get('/advisor/consultations');
+    if (res.data && res.data.length > 0) {
+      return res.data;
+    }
+  } catch (err) {
+    // Return local fallback
+  }
+  return JSON.parse(localStorage.getItem('tt_consultation_leads') || '[]');
 };
 
 // ── Listings (with rich fallback merging) ─────────────────────────────────

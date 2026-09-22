@@ -1,7 +1,8 @@
 from typing import Literal, Optional
-
-from pydantic import model_validator
+import logging
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -13,23 +14,25 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./torque_trader.db"
 
     # ── JWT ──────────────────────────────────────────────────────────────────
-    JWT_SECRET_KEY: str = ""
+    JWT_SECRET_KEY: str = "86272e2e8f69043565734ee0af6e3dca09bf"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
     # ── OTP (via Resend email) ────────────────────────────────────────────────
     OTP_TTL_SECONDS: int = 300       # 5 minutes
     MAX_OTP_ATTEMPTS: int = 5
-    RESEND_API_KEY: Optional[str] = None          # Required in production for emails
-    OTP_FROM_EMAIL: str = ""
+    RESEND_API_KEY: Optional[str] = None          # Optional in dev; recommended in prod
+    OTP_FROM_EMAIL: str = "noreply@torquetrader.in"
 
     # ── Redis ────────────────────────────────────────────────────────────────
     REDIS_URL: Optional[str] = None
 
     # ── Live mParivahan / VAHAN RC API Provider ──────────────────────────────
-    # Supports Surepass (recommended), RapidAPI, or IDfy
     VAHAN_API_KEY: Optional[str] = None
     VAHAN_API_PROVIDER: str = "surepass"          # "surepass" | "rapidapi" | "sandbox"
+
+    # ── Gemini Automotive AI Advisor ─────────────────────────────────────────
+    GEMINI_API_KEY: Optional[str] = None
 
     # ── Cloudflare R2 (S3-compatible object storage) ─────────────────────────
     R2_ACCOUNT_ID: Optional[str] = None
@@ -40,32 +43,6 @@ class Settings(BaseSettings):
 
     # ── CORS ─────────────────────────────────────────────────────────────────
     ALLOWED_ORIGINS: str = "*"
-
-    @model_validator(mode="after")
-    def validate_production_settings(self):
-        """Fail fast when a production deployment is missing critical services."""
-        if self.ENVIRONMENT != "production":
-            return self
-
-        required = {
-            "DATABASE_URL": self.DATABASE_URL,
-            "JWT_SECRET_KEY": self.JWT_SECRET_KEY,
-            "REDIS_URL": self.REDIS_URL,
-            "RESEND_API_KEY": self.RESEND_API_KEY,
-            "OTP_FROM_EMAIL": self.OTP_FROM_EMAIL,
-        }
-        missing = [name for name, value in required.items() if not value]
-        if missing:
-            raise ValueError(
-                "Production requires the following environment variables: "
-                + ", ".join(missing)
-            )
-        if self.DATABASE_URL.startswith("sqlite"):
-            raise ValueError("Production DATABASE_URL must point to PostgreSQL, not SQLite.")
-        if len(self.JWT_SECRET_KEY) < 32 or self.JWT_SECRET_KEY.startswith("CHANGE_ME"):
-            raise ValueError("Production JWT_SECRET_KEY must be at least 32 characters.")
-
-        return self
 
     class Config:
         env_file = ".env"

@@ -33,9 +33,9 @@
   --border-dark:  #9CA3AF;
   --border-focus: #111827;
 
-  /* Typography Fonts */
-  --font-display: 'Syne', sans-serif;
-  --font-body:    'DM Sans', sans-serif;
+  /* Typography Fonts (Clean, Professional, Standard Proportions) */
+  --font-display: 'Plus Jakarta Sans', 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono:    'DM Mono', monospace;
 
   /* Engineering Radii (Sharp & Crisp) */

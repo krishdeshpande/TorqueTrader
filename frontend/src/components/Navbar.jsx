@@ -5,22 +5,52 @@ import AuthModal from './AuthModal';
 import { Icons } from './Icons';
 import './Navbar.css';
 
+const SunIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
 export default function Navbar() {
   const { user, logout, isSeller, isAdmin } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null); // 'consultation' | 'profile' | null
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('tt_theme') || 'light';
+    } catch {
+      return 'light';
+    }
+  });
   const navigate = useNavigate();
 
   const consultationRef = useRef(null);
   const profileRef = useRef(null);
 
-  // Safe fallbacks for user display name and initial
   const displayName = user?.first_name && user?.last_name
     ? `${user.first_name} ${user.last_name}`
     : user?.first_name || user?.email?.split('@')[0] || 'User';
 
   const displayInitial = (user?.first_name || user?.email || 'U')[0].toUpperCase();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('tt_theme', theme);
+    } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -29,7 +59,6 @@ export default function Navbar() {
     setOpenDropdown(null);
   };
 
-  // Close dropdowns on outside click or Escape key
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
@@ -72,13 +101,13 @@ export default function Navbar() {
         <div className="navbar-top-ticker">
           <div className="container ticker-inner">
             <span className="ticker-item">
-              <span className="ticker-bullet">•</span> India's Verified Marketplace & Independent Auto Advisory
+              <span className="ticker-bullet">{'\u2022'}</span> India's Verified Marketplace & Independent Auto Advisory
             </span>
             <span className="ticker-item hide-mobile">
-              <span className="ticker-bullet">•</span> Full-Spectrum Consulting (Cars & Superbikes)
+              <span className="ticker-bullet">{'\u2022'}</span> Full-Spectrum Consulting (Cars & Superbikes)
             </span>
             <span className="ticker-item hide-mobile">
-              <span className="ticker-bullet">•</span> 100% Unbiased · Zero Dealer Kickbacks
+              <span className="ticker-bullet">{'\u2022'}</span> {'100% Unbiased \u00B7 Zero Dealer Kickbacks'}
             </span>
           </div>
         </div>
@@ -98,7 +127,10 @@ export default function Navbar() {
                 Browse Superbikes
               </NavLink>
 
-              {/* Consultation Dropdown */}
+              <NavLink to="/dashboard/new" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                Sell a Bike
+              </NavLink>
+
               <div className="nav-dropdown-container" ref={consultationRef}>
                 <button
                   className="nav-item nav-dropdown-trigger"
@@ -106,7 +138,7 @@ export default function Navbar() {
                   aria-haspopup="menu"
                   aria-expanded={openDropdown === 'consultation'}
                 >
-                  Consultation <span className="dropdown-arrow">▾</span>
+                  {'Consultation \u25BE'}
                 </button>
                 <div className={`nav-dropdown-menu ${openDropdown === 'consultation' ? 'open' : ''}`} role="menu">
                   <NavLink to="/advisor" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
@@ -115,21 +147,26 @@ export default function Navbar() {
                   <NavLink to="/consulting" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
                     1-on-1 Consultation
                   </NavLink>
+                  {(isSeller || isAdmin || user) && (
+                    <NavLink to="/dashboard" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
+                      My Dashboard
+                    </NavLink>
+                  )}
                 </div>
               </div>
-
-              <NavLink to="/dashboard/new" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                Sell a Bike
-              </NavLink>
-              {(isSeller || isAdmin || user) && (
-                <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                  My Dashboard
-                </NavLink>
-              )}
             </nav>
 
-            {/* Right Action Area */}
+            {/* Right Action Area: Theme | Book Consultation | Profile */}
             <div className="navbar-actions">
+              <button
+                className="theme-toggle-btn hide-mobile"
+                onClick={toggleTheme}
+                aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              >
+                {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+              </button>
+
               <Link to="/consulting" className="btn btn-secondary btn-sm hide-mobile">
                 Book Consultation
               </Link>
@@ -144,7 +181,7 @@ export default function Navbar() {
                   >
                     <span className="user-avatar-initial">{displayInitial}</span>
                     <span className="user-profile-text">{displayName}</span>
-                    <span className="dropdown-arrow">▾</span>
+                    <span className="dropdown-arrow">{'\u25BE'}</span>
                   </button>
                   <div className={`nav-dropdown-menu profile-dropdown-menu ${openDropdown === 'profile' ? 'open' : ''}`} role="menu">
                     <button className="nav-dropdown-item" role="menuitem" onClick={() => { navigate('/profile'); closeDropdown(); }}>
@@ -181,27 +218,38 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="mobile-nav-panel">
             <div className="container mobile-nav-inner">
+              <div className="mobile-theme-row">
+                <span className="mobile-theme-label">Appearance</span>
+                <button
+                  className="mobile-theme-toggle"
+                  onClick={toggleTheme}
+                  aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                >
+                  {theme === 'light' ? <><MoonIcon /> Dark Mode</> : <><SunIcon /> Light Mode</>}
+                </button>
+              </div>
+
               <NavLink to="/listings" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Browse Superbikes
               </NavLink>
               <NavLink to="/advisor" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
-                Auto Advisory (AI Intelligence)
+                Auto Advisory
               </NavLink>
               <NavLink to="/consulting" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
-                1-on-1 Personalized Consulting
-              </NavLink>
-              <NavLink to="/dashboard/new" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
-                Sell a Bike (mParivahan Autofill)
+                1-on-1 Consultation
               </NavLink>
               {user && (
                 <NavLink to="/dashboard" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                   My Dashboard
                 </NavLink>
               )}
+              <NavLink to="/dashboard/new" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
+                Sell a Bike
+              </NavLink>
 
               {user && (
                 <NavLink to="/profile" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
-                  Your Profile ({displayName})
+                  Your Profile
                 </NavLink>
               )}
 

@@ -639,3 +639,48 @@ textarea.input {
 @media (max-width: 768px) {
   .container { padding: 0 16px; }
 }
+
+/* ── Dark Mode Overrides ─────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:           #0B0F14;
+  --bg-subtle:    #151B23;
+  --surface:      #1A2029;
+  --text-main:    #F3F4F6;
+  --text-muted:   #9CA3AF;
+  --text-dim:     #6B7280;
+  --border:       #2D3748;
+  --border-dark:  #4A5568;
+  --border-focus: #F3F4F6;
+  --accent:       #DC2626;
+  --accent-hover: #B91C1C;
+  --accent-light: #3B0A0A;
+  --accent-border:#7F1D1D;
+  --green-dark:   #10B981;
+  --green-light:  #064E3B;
+}
+
+[data-theme="dark"] body {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, #1F2937 25%, #374151 50%, #1F2937 75%);
+  background-size: 200% 100%;
+}
+
+[data-theme="dark"] .navbar-top-ticker {
+  background: #000000;
+  border-bottom-color: #1F2937;
+}
+
+[data-theme="dark"] .ticker-item {
+  color: #9CA3AF;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #151B23;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #374151;
+}

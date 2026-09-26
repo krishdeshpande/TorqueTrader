@@ -116,7 +116,8 @@
   gap: 8px;
 }
 
-.user-email-chip {
+/* UPDATED: Replaced .user-email-chip with .user-profile-chip for the clickable button */
+.user-profile-chip {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -127,6 +128,17 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.user-profile-chip:hover {
+  background: var(--surface);
+  border-color: var(--border-dark);
+}
+
+.user-profile-text {
+  line-height: 1;
 }
 
 .user-avatar-initial {

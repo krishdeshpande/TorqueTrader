@@ -36,11 +36,28 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  // New: Dedicated function for updating the profile from the /profile page
+  const updateUserProfile = useCallback(async (profile) => {
+    const { data } = await updateProfile(profile);
+    setUser(data);
+    return data;
+  }, []);
+
   const isAdmin  = user?.role === 'admin';
   const isSeller = user?.role === 'individual_seller' || user?.role === 'dealer';
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, completeProfile, isAdmin, isSeller }}>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      loading,
+      login,
+      logout,
+      completeProfile,
+      updateUserProfile, // <-- Added here
+      isAdmin,
+      isSeller
+    }}>
       {children}
     </AuthContext.Provider>
   );

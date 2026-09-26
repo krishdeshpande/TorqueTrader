@@ -11,6 +11,13 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Safe fallbacks for user display name and initial
+  const displayName = user?.first_name && user?.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : user?.first_name || user?.email?.split('@')[0] || 'User';
+
+  const displayInitial = (user?.first_name || user?.email || 'U')[0].toUpperCase();
+
   const handleLogout = async () => {
     await logout();
     navigate('/');
@@ -73,10 +80,15 @@ export default function Navbar() {
 
               {user ? (
                 <div className="user-profile-menu">
-                  <span className="user-email-chip">
-                    <span className="user-avatar-initial">{user.email ? user.email[0].toUpperCase() : 'U'}</span>
-                    <span className="user-email-text">{user.email ? user.email.split('@')[0] : 'User'}</span>
-                  </span>
+                  {/* Clickable profile chip navigating to /profile */}
+                  <button
+                    className="user-profile-chip"
+                    onClick={() => navigate('/profile')}
+                    title="View Profile"
+                  >
+                    <span className="user-avatar-initial">{displayInitial}</span>
+                    <span className="user-profile-text">{displayName}</span>
+                  </button>
                   <button className="btn btn-ghost btn-sm" onClick={handleLogout} title="Sign Out">
                     Sign Out
                   </button>
@@ -124,10 +136,18 @@ export default function Navbar() {
                   My Dashboard
                 </NavLink>
               )}
+
+              {/* Added mobile profile link for consistency */}
+              {user && (
+                <NavLink to="/profile" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
+                  My Profile ({displayName})
+                </NavLink>
+              )}
+
               <div className="mobile-nav-divider" />
               {user ? (
                 <button className="mobile-nav-link text-danger" onClick={handleLogout}>
-                  Sign Out ({user.email})
+                  Sign Out
                 </button>
               ) : (
                 <button

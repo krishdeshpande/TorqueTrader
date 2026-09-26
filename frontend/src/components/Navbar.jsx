@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
@@ -9,7 +9,11 @@ export default function Navbar() {
   const { user, logout, isSeller, isAdmin } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null); // 'consultation' | 'profile' | null
   const navigate = useNavigate();
+
+  const consultationRef = useRef(null);
+  const profileRef = useRef(null);
 
   // Safe fallbacks for user display name and initial
   const displayName = user?.first_name && user?.last_name
@@ -22,6 +26,43 @@ export default function Navbar() {
     await logout();
     navigate('/');
     setMobileOpen(false);
+    setOpenDropdown(null);
+  };
+
+  // Close dropdowns on outside click or Escape key
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        (consultationRef.current && !consultationRef.current.contains(e.target)) &&
+        (profileRef.current && !profileRef.current.contains(e.target))
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setOpenDropdown(null);
+      }
+    };
+
+    if (openDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [openDropdown]);
+
+  const toggleDropdown = (name) => {
+    setOpenDropdown((prev) => (prev === name ? null : name));
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
   };
 
   return (
@@ -56,12 +97,27 @@ export default function Navbar() {
               <NavLink to="/listings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 Browse Superbikes
               </NavLink>
-              <NavLink to="/advisor" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                Auto Advisory
-              </NavLink>
-              <NavLink to="/consulting" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                1-on-1 Consulting
-              </NavLink>
+
+              {/* Consultation Dropdown */}
+              <div className="nav-dropdown-container" ref={consultationRef}>
+                <button
+                  className="nav-item nav-dropdown-trigger"
+                  onClick={() => toggleDropdown('consultation')}
+                  aria-haspopup="menu"
+                  aria-expanded={openDropdown === 'consultation'}
+                >
+                  Consultation <span className="dropdown-arrow">▾</span>
+                </button>
+                <div className={`nav-dropdown-menu ${openDropdown === 'consultation' ? 'open' : ''}`} role="menu">
+                  <NavLink to="/advisor" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
+                    Auto Advisory
+                  </NavLink>
+                  <NavLink to="/consulting" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
+                    1-on-1 Consultation
+                  </NavLink>
+                </div>
+              </div>
+
               <NavLink to="/dashboard/new" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 Sell a Bike
               </NavLink>
@@ -79,19 +135,25 @@ export default function Navbar() {
               </Link>
 
               {user ? (
-                <div className="user-profile-menu">
-                  {/* Clickable profile chip navigating to /profile */}
+                <div className="user-profile-menu" ref={profileRef}>
                   <button
                     className="user-profile-chip"
-                    onClick={() => navigate('/profile')}
-                    title="View Profile"
+                    onClick={() => toggleDropdown('profile')}
+                    aria-haspopup="menu"
+                    aria-expanded={openDropdown === 'profile'}
                   >
                     <span className="user-avatar-initial">{displayInitial}</span>
                     <span className="user-profile-text">{displayName}</span>
+                    <span className="dropdown-arrow">▾</span>
                   </button>
-                  <button className="btn btn-ghost btn-sm" onClick={handleLogout} title="Sign Out">
-                    Sign Out
-                  </button>
+                  <div className={`nav-dropdown-menu profile-dropdown-menu ${openDropdown === 'profile' ? 'open' : ''}`} role="menu">
+                    <button className="nav-dropdown-item" role="menuitem" onClick={() => { navigate('/profile'); closeDropdown(); }}>
+                      Your Profile
+                    </button>
+                    <button className="nav-dropdown-item sign-out-item" role="menuitem" onClick={handleLogout}>
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
@@ -137,10 +199,9 @@ export default function Navbar() {
                 </NavLink>
               )}
 
-              {/* Added mobile profile link for consistency */}
               {user && (
                 <NavLink to="/profile" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
-                  My Profile ({displayName})
+                  Your Profile ({displayName})
                 </NavLink>
               )}
 

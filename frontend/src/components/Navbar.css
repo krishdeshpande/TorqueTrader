@@ -102,6 +102,91 @@
   border: 1px solid var(--border);
 }
 
+/* ── Dropdowns (Click-to-Open Only) ─────────────────────────────────────── */
+.nav-dropdown-container {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+
+.nav-dropdown-trigger[aria-expanded="true"] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  padding: 6px;
+
+  /* Animation setup */
+  opacity: 0;
+  transform: translateY(-8px);
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.nav-dropdown-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.profile-dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.nav-dropdown-item:hover {
+  background: var(--bg-subtle);
+}
+
+.nav-dropdown-item.sign-out-item {
+  color: var(--accent);
+}
+
+.nav-dropdown-item.sign-out-item:hover {
+  background: var(--accent-light);
+}
+
 /* Actions */
 .navbar-actions {
   display: flex;
@@ -111,12 +196,12 @@
 }
 
 .user-profile-menu {
+  position: relative; /* Required for dropdown positioning */
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* UPDATED: Replaced .user-email-chip with .user-profile-chip for the clickable button */
 .user-profile-chip {
   display: flex;
   align-items: center;

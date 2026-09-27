@@ -147,11 +147,6 @@ export default function Navbar() {
                   <NavLink to="/consulting" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
                     1-on-1 Consultation
                   </NavLink>
-                  {(isSeller || isAdmin || user) && (
-                    <NavLink to="/dashboard" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
-                      My Dashboard
-                    </NavLink>
-                  )}
                 </div>
               </div>
             </nav>
@@ -187,6 +182,9 @@ export default function Navbar() {
                     <button className="nav-dropdown-item" role="menuitem" onClick={() => { navigate('/profile'); closeDropdown(); }}>
                       Your Profile
                     </button>
+                    <NavLink to="/dashboard" className="nav-dropdown-item" role="menuitem" onClick={closeDropdown}>
+                      My Dashboard
+                    </NavLink>
                     <button className="nav-dropdown-item sign-out-item" role="menuitem" onClick={handleLogout}>
                       Sign Out
                     </button>

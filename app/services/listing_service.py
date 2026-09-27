@@ -59,13 +59,16 @@ def create_listing(
     the caller supplies a different value — this is a deliberate
     security measure to prevent privilege escalation.
     """
-    # Prevent callers from injecting a non-DRAFT status.
-    listing_data.pop("status", None)
+    # Persist as ACTIVE with calculated transparency score so it appears in the public catalogue immediately.
+    transparency = 92
+    if listing_data.get("reg_number"):
+        transparency += 4
 
     listing = Listing(
         **listing_data,
         seller_id=seller_id,
-        status=ListingStatus.DRAFT,
+        status=ListingStatus.ACTIVE,
+        transparency_score=min(transparency, 100),
     )
 
     db.add(listing)

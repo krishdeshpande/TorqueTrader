@@ -367,49 +367,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ── Studio Footer ─────────────────────────────────────────────────── */}
-      <footer className="home-footer-root">
-        <div className="container footer-content-grid">
-          <div className="footer-col-main">
-            <div className="footer-brand-title">TORQUE<span>TRADER</span></div>
-            <p className="footer-brand-desc">
-              India's transparent marketplace for verified high-performance motorcycles. Built for enthusiasts, backed by official registration data.
-            </p>
-            <div className="footer-rto-note">
-              Operating across Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, Pune, and all Indian RTO jurisdictions.
-            </div>
-          </div>
-
-          <div className="footer-col-nav">
-            <h4 className="footer-heading">Marketplace</h4>
-            <Link to="/listings" className="footer-link">Browse Superbikes</Link>
-            <Link to="/dashboard/new" className="footer-link">mParivahan RC Tool</Link>
-            <Link to="/dashboard/new" className="footer-link">Sell Your Motorcycle</Link>
-            <Link to="/dashboard" className="footer-link">Seller Dashboard</Link>
-          </div>
-
-          <div className="footer-col-nav">
-            <h4 className="footer-heading">Legal & Compliance</h4>
-            <button type="button" className="footer-link-btn" onClick={() => setShowTerms(true)}>
-              Terms of Service
-            </button>
-            <button type="button" className="footer-link-btn" onClick={() => setShowPrivacy(true)}>
-              Privacy Policy
-            </button>
-            <span className="footer-static-note">Motor Vehicles Act, 1988 Compliance</span>
-            <span className="footer-static-note">Form 29 / 30 Transfer Guidelines</span>
-          </div>
-        </div>
-
-        <div className="container footer-bottom-bar">
-          <span>© 2026 TorqueTrader Technologies India. All rights reserved.</span>
-          <span>Zero Commission Classified Platform</span>
-        </div>
-      </footer>
-
-      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
-      {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }

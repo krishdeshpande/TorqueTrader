@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Browse from './pages/Browse';
 import ListingDetail from './pages/ListingDetail';
@@ -7,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
 import Advisor from './pages/Advisor';
 import Consulting from './pages/Consulting';
-import Profile from './pages/Profile'; // <-- ADDED
+import Profile from './pages/Profile';
 import ProfileOnboarding from './components/ProfileOnboarding';
 import { useAuth } from './context/AuthContext';
 
@@ -25,10 +26,11 @@ export default function App() {
         <Route path="/consulting"     element={<Consulting />} />
         <Route path="/dashboard"      element={<Dashboard />} />
         <Route path="/dashboard/new"  element={<CreateListing />} />
-        <Route path="/profile"        element={<Profile />} /> {/* <-- ADDED */}
+        <Route path="/profile"        element={<Profile />} />
         <Route path="*"               element={<Home />} />
       </Routes>
       {!loading && user?.profile_completed === false && <ProfileOnboarding />}
+      <Footer />
     </>
   );
 }

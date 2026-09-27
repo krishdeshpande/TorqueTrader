@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    # ── Admin / Founder Alert Notifications ──────────────────────────────────
+    FOUNDER_EMAIL: str = "krishdeshpande16@gmail.com"
+
     # ── OTP (via Resend email) ────────────────────────────────────────────────
     OTP_TTL_SECONDS: int = 300       # 5 minutes
     MAX_OTP_ATTEMPTS: int = 5

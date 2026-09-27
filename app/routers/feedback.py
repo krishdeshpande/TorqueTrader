@@ -64,16 +64,16 @@ def _send_feedback_email(feedback: Feedback):
         try:
             resend.Emails.send({
                 "from": f"TorqueTrader <{from_email}>",
-                "to": ["deshpandekrish23@gmail.com"],
+                "to": [settings.FOUNDER_EMAIL],
                 "subject": f"💬 [Feedback] {feedback.category} from {feedback.name or 'A User'}",
                 "html": html_body,
             })
-            logger.info("Feedback email sent to founder.")
+            logger.info("Feedback email sent to founder (%s).", settings.FOUNDER_EMAIL)
         except Exception as exc1:
             # Fallback to sandbox sender
             resend.Emails.send({
                 "from": "TorqueTrader <onboarding@resend.dev>",
-                "to": ["deshpandekrish23@gmail.com"],
+                "to": [settings.FOUNDER_EMAIL],
                 "subject": f"💬 [Feedback] {feedback.category} from {feedback.name or 'A User'}",
                 "html": html_body,
             })

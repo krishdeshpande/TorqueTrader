@@ -70,8 +70,8 @@ def _send_founder_alert(booking: ConsultationBooking):
         </div>
         """
         resend.Emails.send({
-            "from": settings.OTP_FROM_EMAIL,
-            "to": "deshpandekrish23@gmail.com",
+            "from": settings.OTP_FROM_EMAIL or "onboarding@resend.dev",
+            "to": settings.FOUNDER_EMAIL,
             "subject": f"🚨 [TorqueTrader Lead] New Consultation: {booking.client_name} - {booking.tier_title}",
             "html": html_content,
         })

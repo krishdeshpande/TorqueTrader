@@ -243,31 +243,45 @@ export const getListings = async (params = {}) => {
 
   const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
   
-  // Merge seed listings + backend database listings + local custom listings
+  const ensureImages = (item) => {
+    if (item.images && item.images.hero) return item.images;
+    return {
+      hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
+      walkaround: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80'],
+      cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
+      mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
+      flaws: [],
+    };
+  };
+
   const map = new Map();
 
   // 1. Seed base inventory
   SEED_LISTINGS.forEach((item) => {
-    map.set(item.id, item);
-  });
-
-  // 2. Database listings from PostgreSQL
-  backendListings.forEach((item) => {
-    map.set(item.id, {
+    map.set(String(item.id), {
       ...item,
-      images: item.images || {
-        hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
-        walkaround: [],
-        cockpit: [],
-        mechanicals: [],
-        flaws: [],
-      }
+      images: ensureImages(item)
     });
   });
 
-  // 3. User submitted listings
+  // 2. Database listings from PostgreSQL (overrides and takes priority)
+  backendListings.forEach((item) => {
+    map.set(String(item.id), {
+      ...item,
+      images: ensureImages(item)
+    });
+  });
+
+  // 3. User submitted local listings (for instant reactivity & offline resilience)
   local.forEach((item) => {
-    map.set(item.id, item);
+    const key = String(item.id);
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        ...item,
+        images: ensureImages(item)
+      });
+    }
   });
 
   let all = Array.from(map.values());
@@ -309,7 +323,7 @@ export const createListing = async (data) => {
       createdEntry = res.data;
     }
   } catch (err) {
-    // Local fallback
+    console.warn('Backend listing sync fallback to local cache:', err);
   }
 
   if (!createdEntry) {
@@ -340,8 +354,10 @@ export const createListing = async (data) => {
     };
   }
 
-  local.unshift(createdEntry);
-  localStorage.setItem('tt_custom_listings', JSON.stringify(local));
+  // Deduplicate in localStorage
+  const filtered = local.filter(x => String(x.id) !== String(createdEntry.id));
+  filtered.unshift(createdEntry);
+  localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
 
   return { data: createdEntry };
 };

@@ -152,6 +152,7 @@ class Listing(Base):
     equipment: Mapped[list[str] | None] = mapped_column(JSON, nullable=True, default=list)
     editorial_review: Mapped[str | None] = mapped_column(Text, nullable=True)
     media_gallery: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True, default=list)
+    images: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=dict)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Lifecycle & trust

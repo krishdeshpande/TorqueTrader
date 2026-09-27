@@ -65,8 +65,8 @@ class ListingCreate(BaseModel):
     reg_number: Optional[str] = Field(None, max_length=20, examples=["MH02DW1234"])
     rto_state: Optional[str] = Field(None, max_length=100, examples=["Maharashtra (MH02)"])
     ownership_count: Optional[int] = Field(1, ge=1, le=10)
-    displacement_cc: Optional[int] = Field(None, ge=100, le=3000)
-    torque_nm: Optional[float] = Field(None, ge=10)
+    displacement_cc: Optional[int] = Field(None, ge=0, le=5000)
+    torque_nm: Optional[float] = Field(None, ge=0)
     transmission: Optional[str] = Field(None, max_length=100)
     seat_height_mm: Optional[int] = Field(None)
     weight_kg: Optional[int] = Field(None)
@@ -84,7 +84,10 @@ class ListingCreate(BaseModel):
     equipment: Optional[List[str]] = Field(default_factory=list)
     editorial_review: Optional[str] = Field(None)
     media_gallery: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    images: Optional[Dict[str, Any]] = Field(default_factory=dict)
     description: Optional[str] = Field(None)
+
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
 
 
 class ListingStatusUpdate(BaseModel):

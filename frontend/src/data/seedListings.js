@@ -6,7 +6,7 @@
 
 export const SEED_LISTINGS = [
   {
-    id: 1,
+    id: 1001,
     make: "Ducati",
     model: "Panigale V4 S",
     year: 2023,
@@ -81,7 +81,7 @@ export const SEED_LISTINGS = [
     created_at: "2026-06-15T10:00:00Z"
   },
   {
-    id: 2,
+    id: 1002,
     make: "BMW",
     model: "S1000RR M-Sport",
     year: 2023,
@@ -152,7 +152,7 @@ export const SEED_LISTINGS = [
     created_at: "2026-06-20T12:00:00Z"
   },
   {
-    id: 3,
+    id: 1003,
     make: "Kawasaki",
     model: "Ninja ZX-10R",
     year: 2022,
@@ -221,7 +221,7 @@ export const SEED_LISTINGS = [
     created_at: "2026-06-25T14:30:00Z"
   },
   {
-    id: 4,
+    id: 1004,
     make: "Triumph",
     model: "Street Triple 765 RS",
     year: 2023,
@@ -286,7 +286,7 @@ export const SEED_LISTINGS = [
     created_at: "2026-07-01T09:15:00Z"
   },
   {
-    id: 5,
+    id: 1005,
     make: "Aprilia",
     model: "RSV4 1100 Factory",
     year: 2022,
@@ -353,7 +353,7 @@ export const SEED_LISTINGS = [
     created_at: "2026-07-04T16:00:00Z"
   },
   {
-    id: 6,
+    id: 1006,
     make: "Harley-Davidson",
     model: "Fat Boy 114",
     year: 2021,

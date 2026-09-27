@@ -159,23 +159,50 @@ export default function CreateListing() {
     setLoading(true);
     try {
       const payload = {
-        ...form,
+        make: form.make.trim(),
+        model: form.model.trim(),
         year: Number(form.year),
         price: Number(form.price),
-        odometer: Number(form.odometer),
-        bhp: Number(form.bhp),
-        displacement_cc: Number(form.displacement_cc),
-        torque_nm: Number(form.torque_nm || 0),
-        ownership_count: Number(form.ownership_count),
-        modifications: form.modificationsText ? form.modificationsText.split('\n').filter(Boolean) : [],
-        flaws: form.flawsText ? form.flawsText.split('\n').filter(Boolean) : [],
+        odometer: Number(form.odometer || 0),
+        bhp: Number(form.bhp || 100),
+        displacement_cc: form.displacement_cc ? Number(form.displacement_cc) : null,
+        torque_nm: form.torque_nm ? Number(form.torque_nm) : null,
+        ownership_count: Number(form.ownership_count || 1),
+        engine_config: form.engine_config || 'Inline-4',
+        body_type: form.body_type || 'Supersport',
+        location: form.location.trim(),
+        reg_number: form.reg_number ? form.reg_number.trim().toUpperCase() : null,
+        rto_state: form.rto_state ? form.rto_state.trim() : null,
+        transmission: form.transmission || null,
+        seat_height_mm: form.seat_height_mm ? Number(form.seat_height_mm) : null,
+        weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
+        exhaust_type: form.exhaust_type || null,
+        tyre_condition_pct: Number(form.tyre_condition_pct || 85),
+        tyre_dot_year: Number(form.tyre_dot_year || 2023),
+        chain_sprocket_health: form.chain_sprocket_health || null,
+        keys_count: Number(form.keys_count || 2),
+        service_history_type: form.service_history_type || null,
+        insurance_type: form.insurance_type || null,
+        insurance_valid_until: form.insurance_valid_until || null,
+        hypothecation_status: form.hypothecation_status || null,
+        modifications: form.modificationsText ? form.modificationsText.split('\n').map(s => s.trim()).filter(Boolean) : [],
+        flaws: form.flawsText ? form.flawsText.split('\n').map(s => s.trim()).filter(Boolean) : [],
+        description: form.description ? form.description.trim() : null,
+        images: form.images || {
+          hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
+          walkaround: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80'],
+          cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
+          mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
+          flaws: [],
+        },
+        media_gallery: form.images?.walkaround?.map(url => ({ type: 'walkaround', url })) || []
       };
 
       await createListing(payload);
-      toast.success('Superbike listing submitted successfully!');
-      navigate('/dashboard');
+      toast.success('Superbike listed & published to the catalogue successfully!');
+      navigate('/listings');
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to submit listing. Please verify required fields.');
+      toast.error(err.response?.data?.detail || err.message || 'Failed to submit listing. Please verify required fields.');
     } finally {
       setLoading(false);
     }

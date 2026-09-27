@@ -64,12 +64,15 @@ def create_listing(
     if listing_data.get("reg_number"):
         transparency += 4
 
-    listing = Listing(
-        **listing_data,
-        seller_id=seller_id,
-        status=ListingStatus.ACTIVE,
-        transparency_score=min(transparency, 100),
-    )
+    # Sanitize listing_data so only valid Listing columns are passed to constructor
+    valid_cols = {c.name for c in Listing.__table__.columns}
+    cleaned_data = {k: v for k, v in listing_data.items() if k in valid_cols}
+
+    cleaned_data["seller_id"] = seller_id
+    cleaned_data["status"] = ListingStatus.ACTIVE
+    cleaned_data["transparency_score"] = min(transparency, 100)
+
+    listing = Listing(**cleaned_data)
 
     db.add(listing)
     db.commit()

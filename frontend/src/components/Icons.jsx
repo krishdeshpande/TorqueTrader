@@ -150,5 +150,17 @@ export const Icons = {
     <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 10H15M15 10L10 5M15 10L10 15" />
     </svg>
+  ),
+  upload: (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 14V3M10 3L6 7M10 3L14 7" />
+      <path d="M3 14V16C3 16.5523 3.44772 17 4 17H16C16.5523 17 17 16.5523 17 16V14" />
+    </svg>
+  ),
+  trash: (
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6H16M7 6V4C7 3.44772 7.44772 3 8 3H12C12.5523 3 13 3.44772 13 4V6M5 6V16C5 16.5523 5.44772 17 6 17H14C14.5523 17 15 16.5523 15 16V6" />
+      <path d="M8 10V13M12 10V13" />
+    </svg>
   )
 };

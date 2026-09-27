@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createListing, rcLookup, uploadBikePhoto } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +25,12 @@ export default function CreateListing() {
   const [loading, setLoading] = useState(false);
   const [rcLoading, setRcLoading] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+
+  // Photo Upload States
+  const [photoCategory, setPhotoCategory] = useState('walkaround');
+  const [customPhotoUrl, setCustomPhotoUrl] = useState('');
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Form State
   const [form, setForm] = useState({
@@ -115,9 +121,118 @@ export default function CreateListing() {
     }
   };
 
-  const setField = (key, val) => {
-    setForm((prev) => ({ ...prev, [key]: val }));
-    setErrors((prev) => ({ ...prev, [key]: '' }));
+  // Photo Handlers
+  const handleTriggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setUploadingPhotos(true);
+    const readers = files.map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readers).then((dataUrls) => {
+      const validUrls = dataUrls.filter(Boolean);
+      if (!validUrls.length) {
+        setUploadingPhotos(false);
+        return;
+      }
+
+      setForm((prev) => {
+        const updated = { ...prev.images };
+        if (photoCategory === 'hero') {
+          updated.hero = validUrls[0];
+          if (validUrls.length > 1) {
+            updated.walkaround = [...(updated.walkaround || []), ...validUrls.slice(1)];
+          }
+        } else {
+          const currentList = updated[photoCategory] || [];
+          updated[photoCategory] = [...currentList, ...validUrls];
+        }
+        return { ...prev, images: updated };
+      });
+
+      toast.success(`${validUrls.length} photo${validUrls.length > 1 ? 's' : ''} uploaded successfully!`);
+      setUploadingPhotos(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    });
+  };
+
+  const handleAddPhotoUrl = () => {
+    if (!customPhotoUrl.trim()) {
+      toast.error('Please enter a valid image URL');
+      return;
+    }
+    const url = customPhotoUrl.trim();
+    setForm((prev) => {
+      const updated = { ...prev.images };
+      if (photoCategory === 'hero') {
+        updated.hero = url;
+      } else {
+        const currentList = updated[photoCategory] || [];
+        updated[photoCategory] = [...currentList, url];
+      }
+      return { ...prev, images: updated };
+    });
+    setCustomPhotoUrl('');
+    toast.success('Photo URL added to gallery!');
+  };
+
+  const handleSetHeroPhoto = (url) => {
+    setForm((prev) => ({
+      ...prev,
+      images: { ...prev.images, hero: url },
+    }));
+    toast.success('Main cover photo updated!');
+  };
+
+  const handleRemovePhoto = (category, index) => {
+    setForm((prev) => {
+      const updated = { ...prev.images };
+      if (category === 'hero') {
+        const fallback = updated.walkaround?.[0] || 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80';
+        updated.hero = fallback;
+      } else {
+        const list = [...(updated[category] || [])];
+        list.splice(index, 1);
+        updated[category] = list;
+      }
+      return { ...prev, images: updated };
+    });
+    toast.info('Photo removed from listing.');
+  };
+
+  const handleLoadSamplePhotos = () => {
+    setForm((prev) => ({
+      ...prev,
+      images: {
+        hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1600&q=80',
+        walkaround: [
+          'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80',
+        ],
+        cockpit: [
+          'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80',
+        ],
+        mechanicals: [
+          'https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80',
+        ],
+        flaws: [],
+      },
+    }));
+    toast.success('Loaded high-resolution superbike studio sample photography!');
   };
 
   const validateCurrentStep = () => {
@@ -536,10 +651,224 @@ export default function CreateListing() {
           {/* ── Step 3: Photos & Final Review ──────────────────────────────── */}
           {step === 3 && (
             <div className="form-section-block">
-              <h2 className="step-section-heading">Listing Dossier Review</h2>
-              <p className="step-section-sub">Verify all parameters prior to publishing onto the live index.</p>
+              <h2 className="step-section-heading">High-Resolution Photography & Media</h2>
+              <p className="step-section-sub">
+                Upload authentic photography of your motorcycle. Clear, high-res photos significantly increase buyer trust and inquiry rates.
+              </p>
 
-              {/* Review Matrix */}
+              {/* ── Photo Management Suite ────────────────────────────────────── */}
+              <div className="photo-upload-suite-card">
+                {/* Category Selector Tabs */}
+                <div className="photo-category-tabs">
+                  {[
+                    { key: 'hero', label: '⭐ Cover Photo (Hero)' },
+                    { key: 'walkaround', label: 'Walkaround & Angles' },
+                    { key: 'cockpit', label: 'Cockpit & Odometer' },
+                    { key: 'mechanicals', label: 'Engine & Mechanicals' },
+                    { key: 'flaws', label: 'Imperfections & Flaws' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      className={`photo-cat-btn ${photoCategory === cat.key ? 'active' : ''}`}
+                      onClick={() => setPhotoCategory(cat.key)}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Upload Action Box */}
+                <div className="photo-uploader-box">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    multiple
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                  />
+
+                  <div className="uploader-content">
+                    <div className="uploader-icon-wrap">
+                      {Icons.camera}
+                    </div>
+                    <div className="uploader-text">
+                      <h4>Attach Photos to: <span className="cat-highlight">{photoCategory.toUpperCase()}</span></h4>
+                      <p>Supports high-res JPG, PNG, WEBP from your phone or computer.</p>
+                    </div>
+
+                    <div className="uploader-action-btns">
+                      <button
+                        type="button"
+                        className="btn btn-primary photo-select-btn"
+                        onClick={handleTriggerFileInput}
+                        disabled={uploadingPhotos}
+                      >
+                        {Icons.upload} {uploadingPhotos ? 'Reading Photos...' : 'Choose Photos from Device'}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-secondary photo-sample-btn"
+                        onClick={handleLoadSamplePhotos}
+                      >
+                        Load Studio Sample Pack
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* URL Input Option */}
+                  <div className="photo-url-input-row">
+                    <input
+                      type="url"
+                      className="photo-url-field"
+                      placeholder="Or paste high-res image URL (e.g. https://images.unsplash.com/...)"
+                      value={customPhotoUrl}
+                      onChange={(e) => setCustomPhotoUrl(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPhotoUrl(); } }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary photo-add-url-btn"
+                      onClick={handleAddPhotoUrl}
+                    >
+                      {Icons.plus} Add URL
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── Attached Photos Live Grid ───────────────────────────────── */}
+                <div className="attached-gallery-section">
+                  <div className="gallery-header-row">
+                    <span className="gallery-title">Attached Media Gallery</span>
+                    <span className="gallery-count-tag">
+                      {1 + (form.images.walkaround?.length || 0) + (form.images.cockpit?.length || 0) + (form.images.mechanicals?.length || 0) + (form.images.flaws?.length || 0)} Photos Attached
+                    </span>
+                  </div>
+
+                  <div className="attached-photos-grid">
+                    {/* Hero Photo Card */}
+                    {form.images?.hero && (
+                      <div className="attached-photo-card is-hero">
+                        <img src={form.images.hero} alt="Cover Preview" className="photo-thumb-img" />
+                        <div className="photo-role-badge hero-badge">⭐ MAIN COVER</div>
+                        <div className="photo-card-actions">
+                          <button
+                            type="button"
+                            className="photo-action-btn delete-btn"
+                            onClick={() => handleRemovePhoto('hero', 0)}
+                            title="Reset cover photo"
+                          >
+                            {Icons.trash}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Walkaround Photos */}
+                    {(form.images.walkaround || []).map((url, idx) => (
+                      <div key={`walkaround-${idx}`} className="attached-photo-card">
+                        <img src={url} alt={`Walkaround ${idx + 1}`} className="photo-thumb-img" />
+                        <div className="photo-role-badge">Walkaround</div>
+                        <div className="photo-card-actions">
+                          <button
+                            type="button"
+                            className="photo-action-btn set-hero-btn"
+                            onClick={() => handleSetHeroPhoto(url)}
+                            title="Set as Main Cover Photo"
+                          >
+                            Make Cover
+                          </button>
+                          <button
+                            type="button"
+                            className="photo-action-btn delete-btn"
+                            onClick={() => handleRemovePhoto('walkaround', idx)}
+                            title="Delete photo"
+                          >
+                            {Icons.trash}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Cockpit Photos */}
+                    {(form.images.cockpit || []).map((url, idx) => (
+                      <div key={`cockpit-${idx}`} className="attached-photo-card">
+                        <img src={url} alt={`Cockpit ${idx + 1}`} className="photo-thumb-img" />
+                        <div className="photo-role-badge">Cockpit & Odo</div>
+                        <div className="photo-card-actions">
+                          <button
+                            type="button"
+                            className="photo-action-btn set-hero-btn"
+                            onClick={() => handleSetHeroPhoto(url)}
+                            title="Set as Main Cover Photo"
+                          >
+                            Make Cover
+                          </button>
+                          <button
+                            type="button"
+                            className="photo-action-btn delete-btn"
+                            onClick={() => handleRemovePhoto('cockpit', idx)}
+                            title="Delete photo"
+                          >
+                            {Icons.trash}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Mechanicals Photos */}
+                    {(form.images.mechanicals || []).map((url, idx) => (
+                      <div key={`mechanicals-${idx}`} className="attached-photo-card">
+                        <img src={url} alt={`Mechanicals ${idx + 1}`} className="photo-thumb-img" />
+                        <div className="photo-role-badge">Mechanicals</div>
+                        <div className="photo-card-actions">
+                          <button
+                            type="button"
+                            className="photo-action-btn set-hero-btn"
+                            onClick={() => handleSetHeroPhoto(url)}
+                            title="Set as Main Cover Photo"
+                          >
+                            Make Cover
+                          </button>
+                          <button
+                            type="button"
+                            className="photo-action-btn delete-btn"
+                            onClick={() => handleRemovePhoto('mechanicals', idx)}
+                            title="Delete photo"
+                          >
+                            {Icons.trash}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Flaws Photos */}
+                    {(form.images.flaws || []).map((url, idx) => (
+                      <div key={`flaws-${idx}`} className="attached-photo-card">
+                        <img src={url} alt={`Flaw ${idx + 1}`} className="photo-thumb-img" />
+                        <div className="photo-role-badge flaw-badge">Flaw / Mark</div>
+                        <div className="photo-card-actions">
+                          <button
+                            type="button"
+                            className="photo-action-btn delete-btn"
+                            onClick={() => handleRemovePhoto('flaws', idx)}
+                            title="Delete photo"
+                          >
+                            {Icons.trash}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Specification Summary Matrix ────────────────────────────── */}
+              <h3 className="matrix-heading-title" style={{ marginTop: 32, marginBottom: 12 }}>
+                Final Verification Matrix
+              </h3>
               <div className="review-matrix-card">
                 <div className="review-row">
                   <span className="review-k">Motorcycle</span>
@@ -569,17 +898,6 @@ export default function CreateListing() {
                   <span className="review-k">Exhaust</span>
                   <span className="review-v">{form.exhaust_type || 'Stock OEM'}</span>
                 </div>
-              </div>
-
-              {/* Photos status notice */}
-              <div className="photo-review-notice">
-                <div className="photo-notice-head">
-                  <span className="notice-icon">{Icons.camera}</span>
-                  <span className="notice-title">High-Resolution Studio & Walkaround Media</span>
-                </div>
-                <p className="notice-desc">
-                  Default verified gallery templates loaded. You can attach additional high-res photos anytime from your seller dashboard.
-                </p>
               </div>
             </div>
           )}

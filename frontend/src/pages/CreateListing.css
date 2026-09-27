@@ -271,32 +271,271 @@
   color: var(--accent);
 }
 
-.photo-review-notice {
-  background: var(--bg-subtle);
+.matrix-heading-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* ── Photo Management Suite ──────────────────────────────────────────────── */
+.photo-upload-suite-card {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 16px 20px;
+  background: var(--surface);
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
-.photo-notice-head {
+.photo-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.photo-cat-btn {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.photo-cat-btn:hover {
+  color: var(--text-main);
+  background: #FFFFFF;
+}
+
+.photo-cat-btn.active {
+  background: #FFFFFF;
+  color: var(--accent);
+  font-weight: 700;
+  border-bottom: 2px solid var(--accent);
+}
+
+.photo-uploader-box {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  background: #FFFFFF;
+}
+
+.uploader-content {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--text-main);
-  margin-bottom: 4px;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
-.notice-icon {
-  color: var(--accent);
+.uploader-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
-.notice-desc {
+.uploader-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.uploader-text h4 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.cat-highlight {
+  color: var(--accent);
+  font-family: var(--font-mono);
   font-size: 0.82rem;
+}
+
+.uploader-text p {
+  font-size: 0.8rem;
   color: var(--text-muted);
-  line-height: 1.5;
+}
+
+.uploader-action-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.photo-select-btn {
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.photo-sample-btn {
+  font-size: 0.82rem;
+  padding: 8px 14px;
+}
+
+.photo-url-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.photo-url-field {
+  flex: 1;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text-main);
+  outline: none;
+}
+
+.photo-url-field:focus {
+  border-color: var(--accent);
+}
+
+.photo-add-url-btn {
+  height: 38px;
+  padding: 0 14px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+/* ── Attached Photos Live Grid ────────────────────────────────────────────── */
+.attached-gallery-section {
+  padding: 20px 24px 24px;
+  background: var(--bg-subtle);
+}
+
+.gallery-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.gallery-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.gallery-count-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.attached-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.attached-photo-card {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #000000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.attached-photo-card.is-hero {
+  border: 2px solid var(--accent);
+}
+
+.photo-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-role-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(17, 24, 39, 0.85);
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+}
+
+.photo-role-badge.hero-badge {
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+.photo-role-badge.flaw-badge {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+.photo-card-actions {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.photo-action-btn {
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 2px;
+  border: none;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(17, 24, 39, 0.9);
+  color: #FFFFFF;
+  transition: background 0.15s ease;
+}
+
+.photo-action-btn:hover {
+  background: #111827;
+}
+
+.photo-action-btn.delete-btn {
+  background: rgba(220, 38, 38, 0.9);
+  width: 24px;
+  padding: 0;
+}
+
+.photo-action-btn.delete-btn:hover {
+  background: #B91C1C;
 }
 
 /* ── Footer Navigation ────────────────────────────────────────────────────── */

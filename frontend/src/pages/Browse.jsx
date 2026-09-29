@@ -31,7 +31,7 @@ export default function Browse() {
   const [singleOwnerOnly, setSingleOwnerOnly] = useState(false);
   const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '');
-  const [sortBy, setSortBy] = useState('score_desc');
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     setLoading(true);
@@ -40,7 +40,7 @@ export default function Browse() {
         let res = [...data];
 
         if (make) {
-          res = res.filter((l) => l.make.toLowerCase() === make.toLowerCase());
+          res = res.filter((l) => (l.make || '').toLowerCase() === make.toLowerCase());
         }
         if (engine) {
           res = res.filter((l) => l.engine_config === engine);
@@ -77,9 +77,11 @@ export default function Browse() {
           res.sort((a, b) => Number(a.odometer) - Number(b.odometer));
         } else if (sortBy === 'year_desc') {
           res.sort((a, b) => Number(b.year) - Number(a.year));
-        } else {
-          // Default: highest transparency score
+        } else if (sortBy === 'score_desc') {
           res.sort((a, b) => (b.transparency_score || 0) - (a.transparency_score || 0));
+        } else {
+          // Default: Newest listings first
+          res.sort((a, b) => new Date(b.created_at || '2026-01-01').getTime() - new Date(a.created_at || '2026-01-01').getTime());
         }
 
         setListings(res);
@@ -121,6 +123,7 @@ export default function Browse() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
+              <option value="newest">Newest Published First</option>
               <option value="score_desc">Highest Transparency Score</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>

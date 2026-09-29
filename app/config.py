@@ -1,11 +1,14 @@
 from typing import Literal, Optional
 import logging
+from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
     PROJECT_NAME: str = "TorqueTrader API"
     VERSION: str = "1.0.0"
     ENVIRONMENT: Literal["development", "test", "production"] = "development"
@@ -47,9 +50,14 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────────────────────────
     ALLOWED_ORIGINS: str = "*"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    @model_validator(mode="after")
+    def validate_production_settings(self):
+        if self.ENVIRONMENT == "production":
+            if not self.REDIS_URL:
+                raise ValueError("REDIS_URL is required in production environment")
+            if "CHANGE_ME" in self.JWT_SECRET_KEY or len(self.JWT_SECRET_KEY) < 32:
+                raise ValueError("JWT_SECRET_KEY must be a secure random secret")
+        return self
 
 
 settings = Settings()

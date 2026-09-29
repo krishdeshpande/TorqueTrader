@@ -238,7 +238,7 @@ export const getListings = async (params = {}) => {
       backendListings = res.data;
     }
   } catch (err) {
-    // Backend offline / sleeping
+    // Backend offline / cold start
   }
 
   const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
@@ -256,32 +256,28 @@ export const getListings = async (params = {}) => {
 
   const map = new Map();
 
-  // 1. Seed base inventory
+  // 1. Seed base inventory (as fallback baseline)
   SEED_LISTINGS.forEach((item) => {
     map.set(String(item.id), {
       ...item,
-      images: ensureImages(item)
+      images: ensureImages(item),
     });
   });
 
-  // 2. Database listings from PostgreSQL (overrides and takes priority)
+  // 2. Database listings from PostgreSQL (overwrites seeds and takes priority)
   backendListings.forEach((item) => {
     map.set(String(item.id), {
       ...item,
-      images: ensureImages(item)
+      images: ensureImages(item),
     });
   });
 
-  // 3. User submitted local listings (for instant reactivity & offline resilience)
+  // 3. User submitted local listings (guarantees immediate instant reactivity)
   local.forEach((item) => {
-    const key = String(item.id);
-    const existing = map.get(key);
-    if (!existing) {
-      map.set(key, {
-        ...item,
-        images: ensureImages(item)
-      });
-    }
+    map.set(String(item.id), {
+      ...item,
+      images: ensureImages(item),
+    });
   });
 
   let all = Array.from(map.values());
@@ -309,6 +305,9 @@ export const getListings = async (params = {}) => {
   if (params.body_type) {
     all = all.filter(l => l.body_type === params.body_type);
   }
+
+  // Sort: newest created listings at the top
+  all.sort((a, b) => new Date(b.created_at || '2026-01-01').getTime() - new Date(a.created_at || '2026-01-01').getTime());
 
   return { data: all };
 };
@@ -339,7 +338,7 @@ export const createListing = async (data) => {
         cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
         mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
         flaws: [],
-      }
+      },
     };
   }
 
@@ -355,7 +354,7 @@ export const createListing = async (data) => {
   }
 
   // Deduplicate in localStorage
-  const filtered = local.filter(x => String(x.id) !== String(createdEntry.id));
+  const filtered = local.filter((x) => String(x.id) !== String(createdEntry.id));
   filtered.unshift(createdEntry);
   localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
 

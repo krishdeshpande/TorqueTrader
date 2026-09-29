@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Optional, Dict, Any
 
 
 class SendOTPRequest(BaseModel):
@@ -16,9 +16,12 @@ class VerifyOTPRequest(BaseModel):
 
 
 class TokenResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     access_token: str
     token_type: str
     role: str
+    user: Optional[Dict[str, Any]] = None
 
 
 class DealerRegistrationRequest(BaseModel):

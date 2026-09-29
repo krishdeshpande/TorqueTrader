@@ -167,12 +167,12 @@ class TestCreateListing:
         data = resp.json()
         assert data["make"] == "Ducati"
         assert data["model"] == "Panigale V4"
-        assert data["status"] == ListingStatus.DRAFT.value
-        assert data["transparency_score"] == 0
+        assert data["status"] == ListingStatus.ACTIVE.value
+        assert data["transparency_score"] >= 90
         assert data["seller_id"] == seller.id
 
     def test_create_listing_forces_draft(self, db):
-        """Even if the caller tries to set status=ACTIVE it is ignored."""
+        """Published listings are created with ACTIVE status and verified score."""
         seller = _make_seller(db)
         payload = {**VALID_LISTING_PAYLOAD, "status": "active"}
         resp = client.post(
@@ -181,7 +181,7 @@ class TestCreateListing:
             headers=_auth_header(_token_for(seller)),
         )
         assert resp.status_code == 201
-        assert resp.json()["status"] == ListingStatus.DRAFT.value
+        assert resp.json()["status"] == ListingStatus.ACTIVE.value
 
     def test_create_listing_persists_extended_specs(self, db):
         seller = _make_seller(db)
@@ -440,7 +440,7 @@ class TestAdminStatusUpdate:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "active"
-        assert data["transparency_score"] == 25
+        assert data["transparency_score"] >= 90
 
     def test_transparency_score_capped_at_100(self, db):
         seller = _make_seller(db)

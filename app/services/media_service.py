@@ -17,7 +17,13 @@ import os
 import uuid
 from io import BytesIO
 
-import magic
+import mimetypes
+
+try:
+    import magic
+except (ImportError, Exception):
+    magic = None
+
 from PIL import Image
 from fastapi import HTTPException, UploadFile, status
 
@@ -67,12 +73,31 @@ def _store_bytes(bucket: str, key: str, data: bytes, content_type: str) -> str:
 
 # ── MIME validation ───────────────────────────────────────────────────────────
 
-def _validate_mime(content: bytes, allowed: list[str]) -> str:
-    mime = magic.from_buffer(content, mime=True)
-    if mime not in allowed:
+def _validate_mime(content: bytes, allowed: list[str], filename: str = "") -> str:
+    mime = None
+    if magic:
+        try:
+            mime = magic.from_buffer(content, mime=True)
+        except Exception:
+            pass
+
+    if not mime:
+        # Fallback inspection by magic bytes header
+        if content.startswith(b"\xff\xd8\xff"):
+            mime = "image/jpeg"
+        elif content.startswith(b"\x89PNG\r\n\x1a\n"):
+            mime = "image/png"
+        elif content.startswith(b"RIFF") and b"WEBP" in content[:12]:
+            mime = "image/webp"
+        elif content.startswith(b"%PDF"):
+            mime = "application/pdf"
+        elif filename:
+            mime, _ = mimetypes.guess_type(filename)
+
+    if not mime or mime not in allowed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type '{mime}'. Allowed: {', '.join(allowed)}",
+            detail=f"Unsupported file type '{mime or 'unknown'}'. Allowed: {', '.join(allowed)}",
         )
     return mime
 

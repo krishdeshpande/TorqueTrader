@@ -1,0 +1,15 @@
+.tiptap-wrapper { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.tiptap-toolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+.tiptap-toolbar button, .tiptap-image-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-main); }
+.tiptap-toolbar button:hover, .tiptap-image-btn:hover { background: var(--bg); border-color: var(--border-dark); }
+.tiptap-toolbar button.is-active { background: var(--text-main); color: var(--surface); border-color: var(--text-main); }
+.tiptap-content { padding: 16px; min-height: 300px; }
+.tiptap-content:focus { outline: none; }
+.tiptap-content > * + * { margin-top: 0.75em; }
+.tiptap-content h1 { font-size: 2rem; font-weight: 700; }
+.tiptap-content h2 { font-size: 1.5rem; font-weight: 700; }
+.tiptap-content h3 { font-size: 1.25rem; font-weight: 700; }
+.tiptap-content ul, .tiptap-content ol { padding-left: 24px; }
+.tiptap-content blockquote { border-left: 3px solid var(--border-dark); padding-left: 16px; color: var(--text-muted); font-style: italic; }
+.tiptap-content img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+.tiptap-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: var(--text-dim); pointer-events: none; height: 0; }

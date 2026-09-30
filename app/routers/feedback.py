@@ -6,10 +6,11 @@ from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Optional
-from datetime import datetime, timezone
+
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
+
 import resend
 
 from app.database import get_db
@@ -34,7 +35,12 @@ class FeedbackCreateRequest(BaseModel):
 def _send_feedback_email(feedback: Feedback):
     """Send real-time alert email to founder when user submits feedback."""
     if not settings.RESEND_API_KEY:
-        logger.info("[FEEDBACK ALERT] New feedback from %s (%s): %s", feedback.name or "Anonymous", feedback.category, feedback.message)
+        logger.info(
+            "[FEEDBACK ALERT] New feedback from %s (%s): %s",
+            feedback.name or "Anonymous",
+            feedback.category,
+            feedback.message,
+        )
         return
 
     try:
@@ -62,21 +68,28 @@ def _send_feedback_email(feedback: Feedback):
         """
 
         try:
-            resend.Emails.send({
-                "from": f"TorqueTrader <{from_email}>",
-                "to": [settings.FOUNDER_EMAIL],
-                "subject": f"💬 [Feedback] {feedback.category} from {feedback.name or 'A User'}",
-                "html": html_body,
-            })
-            logger.info("Feedback email sent to founder (%s).", settings.FOUNDER_EMAIL)
-        except Exception as exc1:
+            resend.Emails.send(
+                {
+                    "from": f"TorqueTrader <{from_email}>",
+                    "to": [settings.FOUNDER_EMAIL],
+                    "subject": f"💬 [Feedback] {feedback.category} from {feedback.name or 'A User'}",
+                    "html": html_body,
+                }
+            )
+            logger.info(
+                "Feedback email sent to founder (%s).",
+                settings.FOUNDER_EMAIL,
+            )
+        except Exception:
             # Fallback to sandbox sender
-            resend.Emails.send({
-                "from": "TorqueTrader <onboarding@resend.dev>",
-                "to": [settings.FOUNDER_EMAIL],
-                "subject": f"💬 [Feedback] {feedback.category} from {feedback.name or 'A User'}",
-                "html": html_body,
-            })
+            resend.Emails.send(
+                {
+                    "from": "TorqueTrader <onboarding@resend.dev>",
+                    "to": [settings.FOUNDER_EMAIL],
+                    "subject": f"💬 [Feedback] {feedback.category} from {feedback.name or 'A User'}",
+                    "html": html_body,
+                }
+            )
     except Exception as exc:
         logger.error("Failed to send feedback email: %s", exc)
 
@@ -84,13 +97,14 @@ def _send_feedback_email(feedback: Feedback):
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    summary="Submit user feedback or improvement suggestion",
+    summary="Submit user feedback or platform improvement suggestion",
 )
 def submit_feedback(
     payload: FeedbackCreateRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
-    """Store feedback in PostgreSQL and email the founder."""
+    """Store feedback in database and email the founder."""
+
     feedback = Feedback(
         name=payload.name,
         email=payload.email,

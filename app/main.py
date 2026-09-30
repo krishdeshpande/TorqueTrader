@@ -9,15 +9,17 @@ from app.config import settings
 from app.database import engine
 from app.models.base import Base
 import app.models  # noqa: F401 — registers all ORM models so Base.metadata is complete
-from app.routers import auth, media, leads, listings, advisor, feedback
+from app.routers import auth, media, leads, listings, advisor, feedback, blog
 
 logger = logging.getLogger(__name__)
 
-# ── Create tables safely on startup ───────────────────────────────────────────
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    logger.warning("Database schema init notice: %s", e)
+# ── Create tables for local development only ──────────────────────────────────
+# Production schema changes are applied by Alembic before the web process starts.
+if settings.ENVIRONMENT != "production":
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        logger.warning("Database schema init notice: %s", e)
 
 # ── Rate limiter ──────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
@@ -63,13 +65,12 @@ app.include_router(leads.router)
 app.include_router(listings.router)
 app.include_router(advisor.router)
 app.include_router(feedback.router)
-
+app.include_router(blog.router)
 
 # ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Ops"], summary="Liveness probe")
 def health():
     return {"status": "ok", "version": settings.VERSION}
-
 
 @app.get("/", tags=["Ops"])
 @limiter.limit("5/minute")

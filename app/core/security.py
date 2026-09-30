@@ -11,6 +11,7 @@ from app.database import get_db
 from app.models.user import User, UserRole
 from app.redis_client import get_redis
 
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/verify-otp")
 
 
@@ -21,7 +22,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return jwt.encode(
+        to_encode,
+        settings.JWT_SECRET_KEY,
+        algorithm=settings.JWT_ALGORITHM,
+    )
 
 
 def is_token_blacklisted(token: str, redis) -> bool:
@@ -45,12 +50,16 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
     try:
         payload = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
         )
         sub: str = str(payload.get("sub") or "")
         email: str = str(payload.get("email") or "")
+
         if not sub and not email:
             raise credentials_exception
     except JWTError:
@@ -58,8 +67,10 @@ def get_current_user(
 
     # Support looking up user by email or by user.id
     user = None
+
     if email:
         user = db.query(User).filter(User.email == email).first()
+
     if not user and sub:
         if "@" in sub:
             user = db.query(User).filter(User.email == sub).first()
@@ -68,7 +79,28 @@ def get_current_user(
 
     if user is None:
         raise credentials_exception
+
     return user
+
+
+def get_current_user_optional(
+    db: Session = Depends(get_db),
+    redis=Depends(get_redis),
+    token: Optional[str] = Depends(
+        OAuth2PasswordBearer(
+            tokenUrl="auth/verify-otp",
+            auto_error=False,
+        )
+    ),
+) -> Optional[User]:
+    """Returns User if valid token is present, otherwise None. Does not raise 401."""
+    if not token:
+        return None
+
+    try:
+        return get_current_user(token=token, db=db, redis=redis)
+    except HTTPException:
+        return None
 
 
 class RoleChecker:
@@ -86,6 +118,7 @@ class RoleChecker:
         return user
 
 
-# ── Pre-built dependency instances ───────────────────────────────────────────
 require_admin = RoleChecker(allowed_roles=[UserRole.admin])
-require_seller = RoleChecker(allowed_roles=[UserRole.individual_seller, UserRole.dealer])
+require_seller = RoleChecker(
+    allowed_roles=[UserRole.individual_seller, UserRole.dealer]
+)

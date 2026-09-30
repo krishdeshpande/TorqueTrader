@@ -23,12 +23,14 @@ export default function FeedbackSection() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!message.trim()) {
       toast.error('Please enter your feedback or suggestion.');
       return;
     }
 
     setLoading(true);
+
     try {
       await submitFeedback({
         category,
@@ -56,12 +58,20 @@ export default function FeedbackSection() {
             <span className="badge badge-gray" style={{ marginBottom: 8 }}>
               PLATFORM IMPROVEMENT
             </span>
-            <h3 className="feedback-title">Help Us Build TorqueTrader Better</h3>
+
+            <h3 className="feedback-title">
+              Help Us Build TorqueTrader Better
+            </h3>
+
             <p className="feedback-desc">
-              Notice a bug, want a new feature, or have feedback on our automotive advisory? Share your thoughts directly with our founding engineering team.
+              Notice a bug, want a new feature, or have feedback on our
+              automotive advisory? Share your thoughts directly with our
+              founding engineering team.
             </p>
+
             <div className="feedback-founder-note">
-              {Icons.shield} Every submission is reviewed directly by our founder.
+              {Icons.shield} Every submission is reviewed directly by our
+              founder.
             </div>
           </div>
 
@@ -69,10 +79,16 @@ export default function FeedbackSection() {
             {submitted ? (
               <div className="feedback-success-box">
                 <div className="success-icon-wrap">{Icons.check}</div>
-                <h4 className="success-head">Thank You for Your Feedback!</h4>
+
+                <h4 className="success-head">
+                  Thank You for Your Feedback!
+                </h4>
+
                 <p className="success-sub">
-                  Your suggestion has been logged and sent directly to our team inbox.
+                  Your suggestion has been logged and sent directly to our
+                  team inbox.
                 </p>
+
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
@@ -89,13 +105,18 @@ export default function FeedbackSection() {
               <form className="feedback-form" onSubmit={handleSubmit}>
                 {/* Category Pills */}
                 <div className="feedback-field-group">
-                  <label className="feedback-field-label">Feedback Category</label>
+                  <label className="feedback-field-label">
+                    Feedback Category
+                  </label>
+
                   <div className="category-pills-row">
                     {CATEGORIES.map((cat) => (
                       <button
                         key={cat}
                         type="button"
-                        className={`cat-pill-btn ${category === cat ? 'active' : ''}`}
+                        className={`cat-pill-btn ${
+                          category === cat ? 'active' : ''
+                        }`}
                         onClick={() => setCategory(cat)}
                       >
                         {cat}
@@ -107,15 +128,23 @@ export default function FeedbackSection() {
                 {/* Rating Row */}
                 <div className="feedback-field-group">
                   <div className="rating-label-row">
-                    <label className="feedback-field-label">Your Experience Rating</label>
-                    <span className="rating-score-text">{rating} / 5</span>
+                    <label className="feedback-field-label">
+                      Your Experience Rating
+                    </label>
+
+                    <span className="rating-score-text">
+                      {rating} / 5
+                    </span>
                   </div>
+
                   <div className="rating-buttons-row">
                     {[1, 2, 3, 4, 5].map((val) => (
                       <button
                         key={val}
                         type="button"
-                        className={`rating-number-btn ${rating >= val ? 'selected' : ''}`}
+                        className={`rating-number-btn ${
+                          rating >= val ? 'selected' : ''
+                        }`}
                         onClick={() => setRating(val)}
                       >
                         {val}
@@ -126,7 +155,10 @@ export default function FeedbackSection() {
 
                 {/* Message Textarea */}
                 <div className="feedback-field-group">
-                  <label className="feedback-field-label">Your Feedback / Suggestion *</label>
+                  <label className="feedback-field-label">
+                    Your Feedback / Suggestion *
+                  </label>
+
                   <textarea
                     rows={3}
                     className="input"
@@ -140,7 +172,10 @@ export default function FeedbackSection() {
                 {/* Optional Name & Email */}
                 <div className="feedback-grid-2">
                   <div className="feedback-field-group">
-                    <label className="feedback-field-label">Your Name (Optional)</label>
+                    <label className="feedback-field-label">
+                      Your Name (Optional)
+                    </label>
+
                     <input
                       type="text"
                       className="input"
@@ -149,8 +184,12 @@ export default function FeedbackSection() {
                       onChange={(e) => setName(e.target.value)}
                     />
                   </div>
+
                   <div className="feedback-field-group">
-                    <label className="feedback-field-label">Email (For Follow-Up, Optional)</label>
+                    <label className="feedback-field-label">
+                      Email (For Follow-Up, Optional)
+                    </label>
+
                     <input
                       type="email"
                       className="input"
@@ -166,7 +205,9 @@ export default function FeedbackSection() {
                   className="btn btn-primary feedback-submit-btn"
                   disabled={loading}
                 >
-                  {loading ? 'Sending Feedback...' : 'Send Feedback to Founder'}
+                  {loading
+                    ? 'Sending Feedback...'
+                    : 'Send Feedback to Founder'}
                 </button>
               </form>
             )}

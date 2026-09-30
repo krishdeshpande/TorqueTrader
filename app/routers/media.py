@@ -17,7 +17,6 @@ def upload_bike_photo(
 ):
     filename = media_service.process_and_upload_public_photo(file)
     
-    # Save to database
     media_record = Media(
         user_id=current_user.id,
         file_name=file.filename,
@@ -28,17 +27,38 @@ def upload_bike_photo(
     db.commit()
     db.refresh(media_record)
     
-    return {"message": "Public photo uploaded successfully", "media_id": media_record.id, "url": f"/mock-s3/{settings.PUBLIC_BUCKET_NAME}/{filename}"}
+    # Fixed settings.PUBLIC_BUCKET_NAME -> settings.R2_PUBLIC_BUCKET
+    return {"message": "Public photo uploaded successfully", "media_id": media_record.id, "url": f"/mock-s3/{settings.R2_PUBLIC_BUCKET}/{filename}"}
+
+@router.post("/public/blog-image")
+def upload_blog_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user), # Any authenticated user
+    db: Session = Depends(get_db)
+):
+    filename = media_service.process_and_upload_public_photo(file)
+    
+    media_record = Media(
+        user_id=current_user.id,
+        listing_id=None,
+        file_name=file.filename,
+        s3_key=filename,
+        bucket_type=BucketType.public
+    )
+    db.add(media_record)
+    db.commit()
+    db.refresh(media_record)
+    
+    return {"message": "Public blog image uploaded", "media_id": media_record.id, "url": f"/mock-s3/{settings.R2_PUBLIC_BUCKET}/{filename}"}
 
 @router.post("/private/verification-doc")
 def upload_verification_doc(
     file: UploadFile = File(...),
-    current_user: User = Depends(RoleChecker([UserRole.dealer])), # Only dealers upload verification docs
+    current_user: User = Depends(RoleChecker([UserRole.dealer])),
     db: Session = Depends(get_db)
 ):
     filename = media_service.upload_private_document(file)
     
-    # Save to database
     media_record = Media(
         user_id=current_user.id,
         file_name=file.filename,
@@ -61,5 +81,6 @@ def get_presigned_url(
     if not media:
         return {"error": "Media not found or not private"}
         
-    url = media_service.generate_presigned_url(settings.PRIVATE_BUCKET_NAME, media.s3_key)
+    # Fixed settings.PRIVATE_BUCKET_NAME -> settings.R2_PRIVATE_BUCKET
+    url = media_service.generate_presigned_url(settings.R2_PRIVATE_BUCKET, media.s3_key)
     return {"url": url}

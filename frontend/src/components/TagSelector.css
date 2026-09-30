@@ -1,0 +1,8 @@
+.tag-selector { position: relative; }
+.selected-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-height: 44px; align-items: center; }
+.tag-pill { display: inline-flex; align-items: center; gap: 4px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 8px; font-size: 0.8rem; font-weight: 600; }
+.tag-pill button { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem; line-height: 1; }
+.tag-search-input { border: none; outline: none; flex: 1; min-width: 120px; background: transparent; font-size: 0.9rem; color: var(--text-main); }
+.tag-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 4px; max-height: 200px; overflow-y: auto; z-index: 100; list-style: none; padding: 4px 0; }
+.tag-dropdown li { padding: 8px 12px; cursor: pointer; font-size: 0.9rem; }
+.tag-dropdown li:hover { background: var(--bg-subtle); }

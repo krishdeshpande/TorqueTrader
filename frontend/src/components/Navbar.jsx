@@ -127,6 +127,10 @@ export default function Navbar() {
                 Browse Superbikes
               </NavLink>
 
+              <NavLink to="/blog" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                Blog
+              </NavLink>
+
               <NavLink to="/dashboard/new" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 Sell a Bike
               </NavLink>
@@ -229,6 +233,9 @@ export default function Navbar() {
 
               <NavLink to="/listings" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Browse Superbikes
+              </NavLink>
+              <NavLink to="/blog" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
+                Blog
               </NavLink>
               <NavLink to="/advisor" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Auto Advisory

@@ -1,15 +1,240 @@
-.tiptap-wrapper { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
-.tiptap-toolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
-.tiptap-toolbar button, .tiptap-image-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-main); }
-.tiptap-toolbar button:hover, .tiptap-image-btn:hover { background: var(--bg); border-color: var(--border-dark); }
-.tiptap-toolbar button.is-active { background: var(--text-main); color: var(--surface); border-color: var(--text-main); }
-.tiptap-content { padding: 16px; min-height: 300px; }
-.tiptap-content:focus { outline: none; }
-.tiptap-content > * + * { margin-top: 0.75em; }
-.tiptap-content h1 { font-size: 2rem; font-weight: 700; }
-.tiptap-content h2 { font-size: 1.5rem; font-weight: 700; }
-.tiptap-content h3 { font-size: 1.25rem; font-weight: 700; }
-.tiptap-content ul, .tiptap-content ol { padding-left: 24px; }
-.tiptap-content blockquote { border-left: 3px solid var(--border-dark); padding-left: 16px; color: var(--text-muted); font-style: italic; }
-.tiptap-content img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
-.tiptap-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: var(--text-dim); pointer-events: none; height: 0; }
+.tiptap-wrapper {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+/* Writing surface */
+
+.tiptap-content {
+  min-height: 360px;
+  padding: 28px 30px 34px;
+  background: var(--surface);
+}
+
+.tiptap-content .ProseMirror {
+  min-height: 300px;
+  outline: none;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.tiptap-content .ProseMirror > * + * {
+  margin-top: 1em;
+}
+
+.tiptap-content .ProseMirror p {
+  margin: 0;
+}
+
+.tiptap-content .ProseMirror h1,
+.tiptap-content .ProseMirror h2,
+.tiptap-content .ProseMirror h3 {
+  color: var(--text);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.tiptap-content .ProseMirror h1 {
+  margin-top: 1.4em;
+  font-size: 2rem;
+  font-weight: 750;
+}
+
+.tiptap-content .ProseMirror h2 {
+  margin-top: 1.35em;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.tiptap-content .ProseMirror h3 {
+  margin-top: 1.25em;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.tiptap-content .ProseMirror ul,
+.tiptap-content .ProseMirror ol {
+  padding-left: 1.6rem;
+}
+
+.tiptap-content .ProseMirror li + li {
+  margin-top: 0.35em;
+}
+
+.tiptap-content .ProseMirror blockquote {
+  margin-left: 0;
+  padding-left: 18px;
+  border-left: 3px solid var(--primary);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tiptap-content .ProseMirror hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.tiptap-content .ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tiptap-content .ProseMirror img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border-radius: var(--radius-sm);
+}
+
+/* Placeholder */
+
+.tiptap-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--text-muted);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Bottom toolbar */
+
+.tiptap-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 48px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.tiptap-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tiptap-toolbar button,
+.tiptap-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.tiptap-toolbar button:hover,
+.tiptap-toolbar-button:hover {
+  background: var(--bg-subtle);
+  color: var(--text);
+}
+
+.tiptap-toolbar button.is-active {
+  background: var(--bg-subtle);
+  color: var(--text);
+}
+
+.tiptap-toolbar button:focus-visible,
+.tiptap-toolbar-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.tiptap-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 5px;
+  background: var(--border);
+}
+
+.tiptap-toolbar-button {
+  position: relative;
+}
+
+.tiptap-toolbar-button input {
+  display: none;
+}
+
+/* Toolbar icons */
+
+.toolbar-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.toolbar-numbered-icon {
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.toolbar-quote-icon {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.toolbar-rule-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.toolbar-link-icon {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.toolbar-image-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+  .tiptap-content {
+    min-height: 300px;
+    padding: 22px 18px 28px;
+  }
+
+  .tiptap-content .ProseMirror {
+    min-height: 250px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .tiptap-toolbar {
+    gap: 2px;
+    padding: 6px;
+  }
+
+  .tiptap-toolbar-divider {
+    margin: 0 2px;
+  }
+
+  .tiptap-toolbar button,
+  .tiptap-toolbar-button {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+  }
+}

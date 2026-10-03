@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
@@ -18,9 +19,15 @@ import BlogPost from './pages/BlogPost';
 import CreateBlogPost from './pages/CreateBlogPost';
 
 import { useAuth } from './context/AuthContext';
+import { pingBackend } from './api';
 
 export default function App() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    // Warm up Render backend immediately upon initial app mount
+    pingBackend();
+  }, []);
 
   return (
     <>

@@ -7,7 +7,7 @@ export const apiBaseUrl = import.meta.env.VITE_API_URL || (isDevelopment ? 'http
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 60000, // 60s timeout to survive Render free tier cold boots
 });
 
 // Attach JWT on every request if present
@@ -30,6 +30,9 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// ── Warmup Ping ───────────────────────────────────────────────────────────
+export const pingBackend = () => api.get('/health').catch(() => {});
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 export const sendOtp        = (email)       => api.post('/auth/send-otp',    { email });
@@ -230,18 +233,40 @@ export const getConsultations = async () => {
   return JSON.parse(localStorage.getItem('tt_consultation_leads') || '[]');
 };
 
-// ── User Feedback & Suggestions ───────────────────────────────────────────
+// ── User Feedback & Suggestions (Dual Direct Route to Founder) ────────────
 export const submitFeedback = async (feedbackData) => {
-  try {
-    const res = await api.post('/feedback/', feedbackData);
-    return res.data;
-  } catch (err) {
-    // Graceful offline fallback
-    return {
-      success: true,
-      message: 'Thank you for your feedback! It has been recorded.',
-    };
-  }
+  // 1. Dispatch directly to founder email via zero-config webhook relay
+  const emailRelayPromise = axios.post('https://formsubmit.co/ajax/krishdeshpande16@gmail.com', {
+    _subject: `TorqueTrader Feedback: ${feedbackData.category || 'General'} from ${feedbackData.name || 'Anonymous User'}`,
+    _template: 'table',
+    Category: feedbackData.category || 'General Suggestion',
+    Rating: `${feedbackData.rating || 5} / 5 Stars`,
+    'User Name': feedbackData.name || 'Anonymous',
+    'User Email': feedbackData.email || 'Not provided',
+    'User Phone': feedbackData.phone || 'Not provided',
+    'Feedback / Suggestion': feedbackData.message,
+    'Page URL': feedbackData.page_url || window.location.href,
+    'Submitted At': new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+  }, {
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    timeout: 15000,
+  }).catch((err) => {
+    console.warn('Direct email relay notice:', err);
+    return null;
+  });
+
+  // 2. Submit to backend API (stores in PostgreSQL & triggers Resend email if available)
+  const backendPromise = api.post('/feedback/', feedbackData).catch((err) => {
+    console.warn('Backend feedback recording failed:', err);
+    return null;
+  });
+
+  await Promise.allSettled([emailRelayPromise, backendPromise]);
+
+  return {
+    success: true,
+    message: 'Thank you for your feedback! It has been forwarded directly to our founding team.',
+  };
 };
 
 // ── Listings (Robust Permanent Merging) ───────────────────────────────────
@@ -251,9 +276,17 @@ export const getListings = async (params = {}) => {
     const res = await api.get('/listings/', { params });
     if (res.data && Array.isArray(res.data) && res.data.length > 0) {
       backendListings = res.data;
+      // Persist network listings in local storage for instant access across tabs
+      localStorage.setItem('tt_synced_listings', JSON.stringify(backendListings));
     }
   } catch (err) {
-    // Backend offline / cold start
+    // If backend request failed/cold start, load previously synced network cache
+    try {
+      const cached = JSON.parse(localStorage.getItem('tt_synced_listings') || '[]');
+      if (Array.isArray(cached) && cached.length > 0) {
+        backendListings = cached;
+      }
+    } catch (_) {}
   }
 
   const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
@@ -337,7 +370,11 @@ export const createListing = async (data) => {
       createdEntry = res.data;
     }
   } catch (err) {
-    console.warn('Backend listing sync fallback to local cache:', err);
+    console.warn('Backend create listing error:', err);
+    // If it's a 401 unauthenticated error or 422 validation, re-throw so the user is informed
+    if (err.response?.status === 401 || err.response?.status === 422) {
+      throw err;
+    }
   }
 
   if (!createdEntry) {

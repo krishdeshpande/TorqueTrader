@@ -75,6 +75,13 @@ export default function CreateListing() {
 
   const [errors, setErrors] = useState({});
 
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
   // Auto prefill if passed from homepage RC decoder
   useEffect(() => {
     if (locationState.state?.prefillRC) {
@@ -267,6 +274,7 @@ export default function CreateListing() {
 
   const handleSubmitListing = async () => {
     if (!user) {
+      toast.info('Please sign in with your email to publish your listing to the live marketplace.');
       setShowAuth(true);
       return;
     }

@@ -107,6 +107,8 @@ class ListingResponse(ListingCreate):
 
     id: int
     seller_id: int
+    seller_name: Optional[str] = None
+    seller_phone: Optional[str] = None
     status: ListingStatus
     transparency_score: int
     created_at: datetime

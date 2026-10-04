@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import enum
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import (
     CheckConstraint,
@@ -191,6 +191,11 @@ class Listing(Base):
     )
 
     # Relationships
+    seller: Mapped[Optional["User"]] = relationship(
+        "User",
+        lazy="joined",
+        foreign_keys=[seller_id],
+    )
     verification_logs: Mapped[List["VerificationLog"]] = relationship(
         "VerificationLog",
         back_populates="listing",
@@ -198,6 +203,24 @@ class Listing(Base):
         passive_deletes=True,
         lazy="selectin",
     )
+
+    @property
+    def seller_name(self) -> Optional[str]:
+        if self.seller:
+            first = getattr(self.seller, "first_name", None) or ""
+            last = getattr(self.seller, "last_name", None) or ""
+            full = f"{first} {last}".strip()
+            if full:
+                return full
+            email = getattr(self.seller, "email", None)
+            return email.split("@")[0] if email else None
+        return None
+
+    @property
+    def seller_phone(self) -> Optional[str]:
+        if self.seller and getattr(self.seller, "phone_number", None):
+            return self.seller.phone_number
+        return None
 
     # Table-level constraints
     __table_args__ = (

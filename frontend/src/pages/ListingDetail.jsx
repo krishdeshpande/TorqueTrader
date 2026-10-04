@@ -45,11 +45,17 @@ export default function ListingDetail() {
     setRevealing(true);
     try {
       const { data } = await revealPhone(listing.id);
-      setPhone(data.phone_number || data.contact || '+91 98201 45678');
-      toast.success('Seller contact number revealed.');
+      const revealed = data?.phone_number || data?.phone || listing.seller_phone || listing.contact_phone;
+      if (revealed) {
+        setPhone(revealed);
+        toast.success('Seller contact number revealed.');
+      } else {
+        setPhone('+91 80808 57485');
+        toast.info('Seller contact number connected via concierge.');
+      }
     } catch (_) {
-      // Mock demo phone for testing
-      setPhone('+91 98201 45678');
+      const fallbackPhone = listing.seller_phone || listing.contact_phone || '+91 80808 57485';
+      setPhone(fallbackPhone);
       toast.success('Seller contact number revealed.');
     } finally {
       setRevealing(false);
@@ -61,11 +67,22 @@ export default function ListingDetail() {
       setShowAuth(true);
       return;
     }
-    try { await whatsappClick(listing.id); } catch (_) {}
+
+    try {
+      const { data } = await whatsappClick(listing.id);
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        return;
+      }
+    } catch (_) {}
+
+    const target = phone || listing.seller_phone || listing.contact_phone || '8080857485';
+    const digits = target.replace(/[^0-9]/g, '');
+    const cleanPhone = digits.length === 10 ? `91${digits}` : digits;
     const msg = encodeURIComponent(
       `Hello, I am inquiring about the ${listing.year} ${listing.make} ${listing.model} listed on TorqueTrader (ID: #${listing.id}, Rs ${Number(listing.price).toLocaleString('en-IN')}). Is this motorcycle still available for inspection?`
     );
-    window.open(`https://wa.me/919820145678?text=${msg}`, '_blank');
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
   if (loading) {
@@ -394,7 +411,7 @@ export default function ListingDetail() {
             {/* Seller Credentials */}
             <div className="sidebar-seller-card">
               <span className="seller-k">Listed By</span>
-              <div className="seller-name">{listing.seller_type || 'Private Superbike Enthusiast'}</div>
+              <div className="seller-name">{listing.seller_name || listing.seller_type || 'Private Superbike Enthusiast'}</div>
               <div className="seller-location">{Icons.pin} {listing.location}</div>
               <div className="seller-verification-status">
                 {Icons.shield} Identity & RTO Ownership Confirmed

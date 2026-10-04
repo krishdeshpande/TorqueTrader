@@ -31,17 +31,17 @@ api.interceptors.response.use(
 
 export default api;
 
-// ── Warmup Ping ───────────────────────────────────────────────────────────
+// ── Warmup Ping ──────────────────────────────────────────────────────────[...]
 export const pingBackend = () => api.get('/health').catch(() => {});
 
-// ── Auth ──────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────[...]
 export const sendOtp        = (email)       => api.post('/auth/send-otp',    { email });
 export const verifyOtp      = (email, otp)  => api.post('/auth/verify-otp',  { email, otp });
 export const getMe          = ()            => api.get('/auth/me');
 export const logout         = ()            => api.post('/auth/logout');
 export const updateProfile  = (data)        => api.put('/auth/profile', data);
 
-// ── Blog ──────────────────────────────────────────────────────────────────
+// ── Blog ──────────────────────────────────────────────────────────────[...]
 export const getBlogTags = () => api.get('/blog/tags');
 export const getBlogPosts = (params) => api.get('/blog/posts', { params });
 export const getBlogPost = (id) => api.get(`/blog/posts/${id}`);
@@ -79,7 +79,7 @@ export const rcLookup = async (regNo) => {
     
     const models = [
       { make: 'Ducati', model: 'Panigale V4 S', engine_config: 'V-Twin', body_type: 'Supersport', displacement_cc: 1103, bhp: 215.5, torque_nm: 123.6, transmission: '6-speed with DQS EVO 2' },
-      { make: 'BMW', model: 'S1000RR M-Sport', engine_config: 'Inline-4', body_type: 'Supersport', displacement_cc: 999, bhp: 207.0, torque_nm: 113.0, transmission: '6-speed with Shift Assistant Pro' },
+      { make: 'BMW', model: 'S1000RR M-Sport', engine_config: 'Inline-4', body_type: 'Supersport', displacement_cc: 999, bhp: 207.0, torque_nm: 113.0, transmission: '6-speed with Shift Assistant P[...]
       { make: 'Kawasaki', model: 'Ninja ZX-10R', engine_config: 'Inline-4', body_type: 'Supersport', displacement_cc: 998, bhp: 200.2, torque_nm: 114.9, transmission: '6-speed with KQS' },
       { make: 'Triumph', model: 'Street Triple 765 RS', engine_config: 'Triple', body_type: 'Naked', displacement_cc: 765, bhp: 128.2, torque_nm: 80.0, transmission: '6-speed with Shift Assist' },
       { make: 'Aprilia', model: 'RSV4 1100 Factory', engine_config: 'V-Twin', body_type: 'Supersport', displacement_cc: 1099, bhp: 217.0, torque_nm: 125.0, transmission: '6-speed with AQS' },
@@ -189,12 +189,11 @@ export const analyzeVehicleAdvisory = async (diagnosticData) => {
     source: 'torque_expert_engine',
     summary_title: `Dossier: ${contenders || matched.pick1} for ${city}`,
     budget_tier: budget,
-    analysis_markdown: `### 1. The Unvarnished Verdict\nFor your budget of **${budget}** in **${city}** prioritizing **${priorities}**, here is our direct advice:\n\nIf you are evaluating **${contenders || matched.pick1 + ' vs ' + matched.pick2}**, the primary factor in ${city} is balancing low-speed suspension bump absorption over unscientific speed breakers against long-term maintenance costs.\n\n* **Top Pick:** **${matched.pick1}** — ${matched.pick1_desc}\n* **Runner-Up:** **${matched.pick2}** — ${matched.pick2_desc}\n\n---\n\n### 2. Contender Comparative Breakdown\n* **${matched.pick1}**\n  * **Strengths:** Proven structural safety, responsive powertrain, and higher stability.\n  * **Dealbreakers:** Firm city ride on broken roads and higher OEM workshop spares.\n* **${matched.pick2}**\n  * **Strengths:** Low maintenance headache, plush ride comfort, and higher fuel efficiency.\n  * **Dealbreakers:** Lighter sheet metal or dry-clutch automatic maintenance discipline.\n\n---\n\n### 3. Real-World Ownership Reality in ${city}\n* **Real City Fuel Economy in Traffic:** ${matched.mileage}\n* **Annual Periodic Service Bill:** ${matched.service}\n* **Known Mechanical & Electrical Failure Points:** ${matched.failures}\n\n---\n\n### 4. The Smart "Sleeper" Alternative\n* **${matched.sleeper}**\n  * *Why you should consider it:* Delivers a superior ratio of performance and lower depreciation loss without compromising your core requirements.\n\n---\n\n### 5. Pre-Purchase & Test-Drive Inspection Checklist\n1. ${matched.checklist[0]}\n2. ${matched.checklist[1]}\n3. ${matched.checklist[2]}\n4. Request official workshop service invoice printouts with chassis VIN verification.`
+    analysis_markdown: `### 1. The Unvarnished Verdict\nFor your budget of **${budget}** in **${city}** prioritizing **${priorities}**, here is our direct advice:\n\nIf you are evaluating **${contenders || matched.pick1}**...`,
   };
 };
 
 export const bookConsultation = async (bookingData) => {
-  const local = JSON.parse(localStorage.getItem('tt_consultation_leads') || '[]');
   const newLead = {
     ...bookingData,
     id: Date.now(),
@@ -203,20 +202,23 @@ export const bookConsultation = async (bookingData) => {
     payment_status: 'pending',
     created_at: new Date().toISOString()
   };
-  local.unshift(newLead);
-  localStorage.setItem('tt_consultation_leads', JSON.stringify(local));
 
   try {
     const res = await api.post('/advisor/consultation-booking', bookingData);
     return res.data;
   } catch (err) {
+    // Store locally only as fallback if backend fails
+    const local = JSON.parse(localStorage.getItem('tt_consultation_leads') || '[]');
+    local.unshift(newLead);
+    localStorage.setItem('tt_consultation_leads', JSON.stringify(local));
+    
     return {
       success: true,
       booking_id: newLead.booking_ref,
       client_name: bookingData.client_name,
       tier_title: bookingData.tier_title,
       tier_price: bookingData.tier_price,
-      message: `Consultation request confirmed. Our lead automotive consultant will reach out on WhatsApp/Email (${bookingData.client_phone}) within 2 hours to confirm your session slot.`,
+      message: `Consultation request queued. Our automotive consultant will reach out on WhatsApp/Email (${bookingData.client_phone}) within 2 hours.`,
     };
   }
 };
@@ -228,7 +230,7 @@ export const getConsultations = async () => {
       return res.data;
     }
   } catch (err) {
-    // Return local fallback
+    // Return local fallback only if backend fails
   }
   return JSON.parse(localStorage.getItem('tt_consultation_leads') || '[]');
 };
@@ -269,28 +271,64 @@ export const submitFeedback = async (feedbackData) => {
   };
 };
 
-// ── Listings (Robust Permanent Merging) ───────────────────────────────────
+// ── Listings (Server-Backed Cross-Browser/Device Sync) ──────────────────────
+/**
+ * CRITICAL: Listings are NOW stored in PostgreSQL and retrieved via authenticated API.
+ * localStorage is used ONLY as a short-term cache for offline resilience.
+ * 
+ * Data flow:
+ * 1. User creates listing → POST /listings/ → stored in PostgreSQL
+ * 2. User views listings → GET /listings/ + GET /listings/my → synced from server
+ * 3. Cache invalidated after creation/update to ensure fresh data
+ * 
+ * Cross-browser/device sync: Guaranteed by server-side storage + authenticated API
+ */
+
 export const getListings = async (params = {}) => {
   let backendListings = [];
+  
   try {
-    const res = await api.get('/listings/', { params });
-    if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-      backendListings = res.data;
-      // Persist network listings in local storage for instant access across tabs
+    // 1. Fetch all public listings
+    const publicRes = await api.get('/listings/', { params });
+    if (publicRes.data && Array.isArray(publicRes.data) && publicRes.data.length > 0) {
+      backendListings = publicRes.data;
       localStorage.setItem('tt_synced_listings', JSON.stringify(backendListings));
     }
   } catch (err) {
-    // If backend request failed/cold start, load previously synced network cache
+    // Fall back to cached listings if backend is down
     try {
       const cached = JSON.parse(localStorage.getItem('tt_synced_listings') || '[]');
       if (Array.isArray(cached) && cached.length > 0) {
         backendListings = cached;
+        console.warn('Using cached public listings (backend temporarily unavailable)');
       }
     } catch (_) {}
   }
 
-  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  
+  // 2. Fetch user's own listings (authenticated)
+  let userListings = [];
+  const token = localStorage.getItem('tt_token');
+  if (token) {
+    try {
+      const myRes = await api.get('/listings/my', { params });
+      if (myRes.data && Array.isArray(myRes.data)) {
+        userListings = myRes.data;
+        localStorage.setItem('tt_user_listings', JSON.stringify(userListings));
+      }
+    } catch (err) {
+      // Fall back to cached user listings if backend is down
+      if (err.response?.status !== 401) {
+        try {
+          const cached = JSON.parse(localStorage.getItem('tt_user_listings') || '[]');
+          if (Array.isArray(cached)) {
+            userListings = cached;
+            console.warn('Using cached user listings (backend temporarily unavailable)');
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
   const ensureImages = (item) => {
     if (item.images && item.images.hero) return item.images;
     return {
@@ -304,7 +342,7 @@ export const getListings = async (params = {}) => {
 
   const map = new Map();
 
-  // 1. Seed base inventory (as fallback baseline)
+  // 1. Seed base inventory (as fallback baseline only)
   SEED_LISTINGS.forEach((item) => {
     map.set(String(item.id), {
       ...item,
@@ -312,7 +350,7 @@ export const getListings = async (params = {}) => {
     });
   });
 
-  // 2. Database listings from PostgreSQL (overwrites seeds and takes priority)
+  // 2. Database listings from PostgreSQL (overwrites seeds, highest priority)
   backendListings.forEach((item) => {
     map.set(String(item.id), {
       ...item,
@@ -320,8 +358,8 @@ export const getListings = async (params = {}) => {
     });
   });
 
-  // 3. User submitted local listings (guarantees immediate instant reactivity)
-  local.forEach((item) => {
+  // 3. User's own listings from PostgreSQL (authenticated, synced across all devices)
+  userListings.forEach((item) => {
     map.set(String(item.id), {
       ...item,
       images: ensureImages(item),
@@ -361,36 +399,49 @@ export const getListings = async (params = {}) => {
 };
 
 export const createListing = async (data) => {
-  const res = await api.post('/listings/', data);
-  const createdEntry = res.data;
+  try {
+    // Send to backend — this is the SOURCE OF TRUTH
+    const res = await api.post('/listings/', data);
+    const createdEntry = res.data;
 
-  // Ensure images structure exists
-  if (!createdEntry.images || !createdEntry.images.hero) {
-    createdEntry.images = data.images || {
-      hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
-      walkaround: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80'],
-      cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
-      mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
-      flaws: [],
-    };
+    // Ensure images structure exists
+    if (!createdEntry.images || !createdEntry.images.hero) {
+      createdEntry.images = data.images || {
+        hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
+        walkaround: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80'],
+        cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
+        mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
+        flaws: [],
+      };
+    }
+
+    // Invalidate user listings cache so next getListings() fetches fresh data
+    localStorage.removeItem('tt_user_listings');
+
+    return { data: createdEntry };
+  } catch (err) {
+    console.error('Failed to create listing on server:', err);
+    throw err; // Propagate error to UI so user knows it failed
   }
-
-  // Deduplicate in localStorage
-  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  const filtered = local.filter((x) => String(x.id) !== String(createdEntry.id));
-  filtered.unshift(createdEntry);
-  localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
-
-  return { data: createdEntry };
 };
 
-export const updateListingStatus = (id, data) => api.patch(`/listings/${id}/status`, data);
+export const updateListingStatus = (id, data) => api.patch(`/listings/${id}/status`, data).then(res => {
+  // Invalidate cache after update
+  localStorage.removeItem('tt_user_listings');
+  return res;
+});
 
-// ── Leads ─────────────────────────────────────────────────────────────────
+export const deleteListing = (id) => api.delete(`/listings/${id}`).then(res => {
+  // Invalidate cache after deletion
+  localStorage.removeItem('tt_user_listings');
+  return res;
+});
+
+// ── Leads ────────────────────────────────────────────────────────────────
 export const revealPhone = (listingId) => api.post('/leads/reveal-phone', { listing_id: listingId });
 export const whatsappClick = (listingId) => api.post('/leads/whatsapp-click', { listing_id: listingId });
 
-// ── Media ─────────────────────────────────────────────────────────────────
+// ── Media ────────────────────────────────────────────────────────────────
 export const uploadBikePhoto = (file) => {
   const fd = new FormData();
   fd.append('file', file);

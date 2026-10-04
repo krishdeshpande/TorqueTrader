@@ -5,13 +5,16 @@ from app.config import settings
 
 # ── Engine configuration ───────────────────────────────────────────────────
 # SQLite is used for local development; PostgreSQL for production.
-# The connect_args trick is SQLite-specific and must be omitted for PG.
-_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+_is_sqlite = db_url.startswith("sqlite")
 
 connect_args = {"check_same_thread": False} if _is_sqlite else {}
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args=connect_args,
     # Connection pool settings (ignored by SQLite's StaticPool in tests)
     pool_pre_ping=True,     # Detect stale connections

@@ -11,10 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.listing import EngineConfig, ListingStatus
+from app.models.user import User, UserRole, UserStatus
 from app.schemas.listing import ListingCreate, ListingResponse, ListingStatusUpdate, RCLookupResponse
 from app.services import listing_service
 from app.services.mparivahan import lookup_rc_details, clean_reg_number
-from app.core.security import get_current_user, require_admin
+from app.core.security import get_current_user, get_current_user_optional, require_admin
 
 router = APIRouter(prefix="/listings", tags=["Inventory"])
 
@@ -56,7 +57,7 @@ def rc_lookup(reg_no: str) -> RCLookupResponse:
 )
 def create_listing(
     payload: ListingCreate,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ListingResponse:
     """Create a new listing owned by the authenticated seller."""

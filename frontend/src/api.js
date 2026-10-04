@@ -361,38 +361,8 @@ export const getListings = async (params = {}) => {
 };
 
 export const createListing = async (data) => {
-  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  let createdEntry = null;
-
-  try {
-    const res = await api.post('/listings/', data);
-    if (res.data) {
-      createdEntry = res.data;
-    }
-  } catch (err) {
-    console.warn('Backend create listing error:', err);
-    // If it's a 401 unauthenticated error or 422 validation, re-throw so the user is informed
-    if (err.response?.status === 401 || err.response?.status === 422) {
-      throw err;
-    }
-  }
-
-  if (!createdEntry) {
-    createdEntry = {
-      ...data,
-      id: Date.now(),
-      status: 'active',
-      transparency_score: 94,
-      created_at: new Date().toISOString(),
-      images: data.images || {
-        hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
-        walkaround: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80'],
-        cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
-        mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
-        flaws: [],
-      },
-    };
-  }
+  const res = await api.post('/listings/', data);
+  const createdEntry = res.data;
 
   // Ensure images structure exists
   if (!createdEntry.images || !createdEntry.images.hero) {
@@ -406,6 +376,7 @@ export const createListing = async (data) => {
   }
 
   // Deduplicate in localStorage
+  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
   const filtered = local.filter((x) => String(x.id) !== String(createdEntry.id));
   filtered.unshift(createdEntry);
   localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));

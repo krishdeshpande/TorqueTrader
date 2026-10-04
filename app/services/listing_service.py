@@ -154,6 +154,29 @@ def get_listings(
     return db.scalars(stmt).all()
 
 
+def get_my_listings(
+    db: Session,
+    *,
+    seller_id: int,
+    skip: int = 0,
+    limit: int = 50,
+) -> Sequence[Listing]:
+    """Return all listings owned by the currently authenticated seller.
+
+    This is the authoritative source for "my listings" across all browsers and
+    devices because the data lives in the shared PostgreSQL database, not in any
+    browser localStorage.
+    """
+    stmt = (
+        select(Listing)
+        .where(Listing.seller_id == seller_id)
+        .order_by(Listing.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return db.scalars(stmt).all()
+
+
 # ---------------------------------------------------------------------------
 # UPDATE — Admin status transitions
 # ---------------------------------------------------------------------------
@@ -202,3 +225,18 @@ def update_listing_status(
     db.commit()
     db.refresh(listing)
     return listing
+
+
+def delete_listing(db: Session, listing_id: int, seller_id: int) -> bool:
+    """Delete a listing only if it belongs to the authenticated seller."""
+    listing: Optional[Listing] = db.get(Listing, listing_id)
+    if listing is None:
+        return False
+
+    if listing.seller_id != seller_id:
+        return False
+
+    db.delete(listing)
+    db.commit()
+    return True
+

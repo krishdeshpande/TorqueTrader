@@ -102,6 +102,30 @@ def search_listings(
 
 
 # ---------------------------------------------------------------------------
+# GET /listings/my — Authenticated Seller Listings
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/my",
+    response_model=List[ListingResponse],
+    summary="Get all listings owned by the authenticated seller",
+)
+def get_my_listings(
+    current_user: User = Depends(get_current_user),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
+    db: Session = Depends(get_db),
+) -> List[ListingResponse]:
+    """Fetch all listings belonging to the authenticated user."""
+    return listing_service.get_my_listings(
+        db=db,
+        seller_id=current_user.id,
+        skip=skip,
+        limit=limit,
+    )
+
+
+# ---------------------------------------------------------------------------
 # PATCH /listings/{listing_id}/status — Admin status transition
 # ---------------------------------------------------------------------------
 
@@ -131,3 +155,30 @@ def update_listing_status(
         )
 
     return listing
+
+
+# ---------------------------------------------------------------------------
+# DELETE /listings/{listing_id} — Delete listing
+# ---------------------------------------------------------------------------
+
+@router.delete(
+    "/{listing_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a listing owned by the authenticated seller",
+)
+def delete_listing(
+    listing_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a listing if owned by the current user."""
+    success = listing_service.delete_listing(
+        db=db,
+        listing_id=listing_id,
+        seller_id=current_user.id,
+    )
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Listing not found or you do not have permission to delete it.",
+        )

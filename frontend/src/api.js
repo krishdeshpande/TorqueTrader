@@ -79,7 +79,7 @@ export const rcLookup = async (regNo) => {
     
     const models = [
       { make: 'Ducati', model: 'Panigale V4 S', engine_config: 'V-Twin', body_type: 'Supersport', displacement_cc: 1103, bhp: 215.5, torque_nm: 123.6, transmission: '6-speed with DQS EVO 2' },
-      { make: 'BMW', model: 'S1000RR M-Sport', engine_config: 'Inline-4', body_type: 'Supersport', displacement_cc: 999, bhp: 207.0, torque_nm: 113.0, transmission: '6-speed with Shift Assistant P[...]
+      { make: 'BMW', model: 'S1000RR M-Sport', engine_config: 'Inline-4', body_type: 'Supersport', displacement_cc: 999, bhp: 207.0, torque_nm: 113.0, transmission: '6-speed with Shift Assistant Pro' },
       { make: 'Kawasaki', model: 'Ninja ZX-10R', engine_config: 'Inline-4', body_type: 'Supersport', displacement_cc: 998, bhp: 200.2, torque_nm: 114.9, transmission: '6-speed with KQS' },
       { make: 'Triumph', model: 'Street Triple 765 RS', engine_config: 'Triple', body_type: 'Naked', displacement_cc: 765, bhp: 128.2, torque_nm: 80.0, transmission: '6-speed with Shift Assist' },
       { make: 'Aprilia', model: 'RSV4 1100 Factory', engine_config: 'V-Twin', body_type: 'Supersport', displacement_cc: 1099, bhp: 217.0, torque_nm: 125.0, transmission: '6-speed with AQS' },

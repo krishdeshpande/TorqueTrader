@@ -16,6 +16,38 @@ const STEPS = [
   { id: 3, title: 'Photos & Review' },
 ];
 
+const compressImageFile = (file, maxWidth = 1200, quality = 0.78) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type?.startsWith('image/')) {
+      resolve(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function CreateListing() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -135,24 +167,16 @@ export default function CreateListing() {
     }
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     setUploadingPhotos(true);
-    const readers = files.map((file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => resolve(ev.target.result);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(readers).then((dataUrls) => {
-      const validUrls = dataUrls.filter(Boolean);
+    try {
+      const compressedList = await Promise.all(files.map((f) => compressImageFile(f)));
+      const validUrls = compressedList.filter(Boolean);
       if (!validUrls.length) {
-        setUploadingPhotos(false);
+        toast.error('Could not process selected image files.');
         return;
       }
 
@@ -170,10 +194,14 @@ export default function CreateListing() {
         return { ...prev, images: updated };
       });
 
-      toast.success(`${validUrls.length} photo${validUrls.length > 1 ? 's' : ''} uploaded successfully!`);
+      toast.success(`${validUrls.length} photo${validUrls.length > 1 ? 's' : ''} optimized & added to gallery!`);
+    } catch (err) {
+      console.error('Photo optimization error:', err);
+      toast.error('Failed to process image files.');
+    } finally {
       setUploadingPhotos(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
-    });
+    }
   };
 
   const handleAddPhotoUrl = () => {

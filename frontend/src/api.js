@@ -329,6 +329,19 @@ export const getListings = async (params = {}) => {
     }
   }
 
+  const safeSetLocalStorage = (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (err) {
+      console.warn(`localStorage quota warning for ${key}:`, err);
+      try {
+        localStorage.removeItem('tt_synced_listings');
+        localStorage.removeItem('tt_user_listings');
+        localStorage.setItem(key, value);
+      } catch (_) {}
+    }
+  };
+
   const ensureImages = (item) => {
     if (item.images && item.images.hero) return item.images;
     return {
@@ -367,13 +380,41 @@ export const getListings = async (params = {}) => {
   });
 
   // 4. Custom listings created on this device (guarantees permanent instant visibility on this browser)
-  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  local.forEach((item) => {
-    map.set(String(item.id), {
-      ...item,
-      images: ensureImages(item),
+  let local = [];
+  try {
+    local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
+  } catch (_) {
+    local = [];
+  }
+
+  if (Array.isArray(local)) {
+    local.forEach((item) => {
+      map.set(String(item.id), {
+        ...item,
+        images: ensureImages(item),
+      });
     });
-  });
+
+    // Background sync: if user is authenticated and has local unsynced listings, sync them to cloud
+    if (token && local.length > 0) {
+      const unsynced = local.filter((x) => x._needs_sync || Number(x.id) > 1000000000);
+      if (unsynced.length > 0) {
+        Promise.all(
+          unsynced.map(async (item) => {
+            try {
+              const { id, _needs_sync, ...postData } = item;
+              const syncRes = await api.post('/listings/', postData);
+              if (syncRes?.data) {
+                const cur = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
+                const updated = cur.map((l) => (String(l.id) === String(id) ? syncRes.data : l));
+                safeSetLocalStorage('tt_custom_listings', JSON.stringify(updated));
+              }
+            } catch (_) {}
+          })
+        ).catch(() => {});
+      }
+    }
+  }
 
   let all = Array.from(map.values());
 
@@ -420,7 +461,7 @@ export const createListing = async (data) => {
     console.warn('Backend sync failed, storing to local device cache:', err);
   }
 
-  // 2. Fallback entry if network was offline
+  // 2. Fallback entry if network was offline or backend sleeping
   if (!createdEntry) {
     createdEntry = {
       ...data,
@@ -429,6 +470,7 @@ export const createListing = async (data) => {
       transparency_score: 94,
       created_at: new Date().toISOString(),
       images: data.images,
+      _needs_sync: true,
     };
   }
 
@@ -443,14 +485,25 @@ export const createListing = async (data) => {
     };
   }
 
-  // 3. Store in localStorage so it is immediately and permanently visible on this device
-  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  const filtered = local.filter((x) => String(x.id) !== String(createdEntry.id));
-  filtered.unshift(createdEntry);
-  localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
+  // 3. Store in localStorage safely so it is immediately and permanently visible on this device
+  try {
+    const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
+    const filtered = local.filter((x) => String(x.id) !== String(createdEntry.id));
+    filtered.unshift(createdEntry);
+    localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
+  } catch (storageErr) {
+    console.warn('LocalStorage save error:', storageErr);
+    try {
+      localStorage.removeItem('tt_synced_listings');
+      localStorage.removeItem('tt_user_listings');
+      localStorage.setItem('tt_custom_listings', JSON.stringify([createdEntry]));
+    } catch (_) {}
+  }
 
   // Invalidate user listings cache so next call fetches fresh data
-  localStorage.removeItem('tt_user_listings');
+  try {
+    localStorage.removeItem('tt_user_listings');
+  } catch (_) {}
 
   return { data: createdEntry };
 };
@@ -461,10 +514,12 @@ export const updateListingStatus = (id, data) => api.patch(`/listings/${id}/stat
 });
 
 export const deleteListing = (id) => {
-  const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  const filtered = local.filter((x) => String(x.id) !== String(id));
-  localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
-  localStorage.removeItem('tt_user_listings');
+  try {
+    const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
+    const filtered = local.filter((x) => String(x.id) !== String(id));
+    localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
+    localStorage.removeItem('tt_user_listings');
+  } catch (_) {}
   return api.delete(`/listings/${id}`).catch(() => ({ success: true }));
 };
 

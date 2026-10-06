@@ -13,13 +13,11 @@ from app.routers import auth, media, leads, listings, advisor, feedback, blog
 
 logger = logging.getLogger(__name__)
 
-# ── Create tables for local development only ──────────────────────────────────
-# Production schema changes are applied by Alembic before the web process starts.
-if settings.ENVIRONMENT != "production":
-    try:
-        Base.metadata.create_all(bind=engine)
-    except Exception as e:
-        logger.warning("Database schema init notice: %s", e)
+# ── Create / ensure all database tables exist on boot (SQLite / PostgreSQL / Supabase) ─
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    logger.warning("Database schema init notice: %s", e)
 
 # ── Rate limiter ──────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)

@@ -28,6 +28,9 @@
   --green-dark:   #15803D;  /* Certified inspection green */
   --green-light:  #F0FDF4;
 
+  --red:          #DC2626;
+  --red-light:    #FEF2F2;
+
   /* Architectural Borders */
   --border:       #D1D5DB;  /* Crisp 1px structure */
   --border-dark:  #9CA3AF;
@@ -146,6 +149,28 @@ img {
   height: 36px;
   padding: 0 12px;
   font-size: 0.82rem;
+}
+
+.btn-danger {
+  background: var(--red);
+  color: #FFFFFF;
+  border-color: var(--red);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #B91C1C;
+  border-color: #B91C1C;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  color: var(--red);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.btn-danger-outline:hover:not(:disabled) {
+  background: var(--red-light);
+  border-color: var(--red);
 }
 
 /* ── Form Inputs ─────────────────────────────────────────────────────────── */

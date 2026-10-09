@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getListings, revealPhone, whatsappClick } from '../api';
+import { getListings, revealPhone, whatsappClick, deleteListing } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
 import AuthModal from '../components/AuthModal';
@@ -22,6 +22,8 @@ export default function ListingDetail() {
   const [showAuth, setShowAuth] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     getListings()
@@ -85,6 +87,35 @@ export default function ListingDetail() {
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
+  const isOwner = Boolean(
+    user && listing && (
+      (listing.seller_id && Number(user.id) === Number(listing.seller_id)) ||
+      (listing.seller_email && user.email?.toLowerCase() === listing.seller_email?.toLowerCase()) ||
+      (user.role === 'admin') ||
+      (() => {
+        try {
+          const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
+          return local.some((l) => String(l.id) === String(listing.id));
+        } catch (_) {
+          return false;
+        }
+      })()
+    )
+  );
+
+  const handleDeleteListing = async () => {
+    setDeleting(true);
+    try {
+      await deleteListing(listing.id);
+      toast.success('Listing permanently deleted.');
+      navigate('/listings');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete listing. You can only delete your own listings.');
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="detail-root container" style={{ paddingTop: 120 }}>
@@ -125,6 +156,11 @@ export default function ListingDetail() {
             <span className="detail-badge-status">
               {listing.ownership_count === 1 ? 'Single Owner' : `${listing.ownership_count} Owners`}
             </span>
+            {isOwner && (
+              <span className="detail-badge-owner">
+                {Icons.shield} Your Listing
+              </span>
+            )}
           </div>
 
           <h1 className="detail-vehicle-title">{vehicleTitle}</h1>
@@ -417,6 +453,28 @@ export default function ListingDetail() {
                 {Icons.shield} Identity & RTO Ownership Confirmed
               </div>
             </div>
+
+            {/* Seller Controls (Only visible to listing creator or admin) */}
+            {isOwner && (
+              <div className="sidebar-owner-card">
+                <div className="owner-card-header">
+                  <span className="owner-card-title">{Icons.shield} Owner Controls</span>
+                  <span className="owner-card-badge">Authorized</span>
+                </div>
+                <p className="owner-card-desc">
+                  You created this listing. Only you (and platform admins) have permission to manage or delete it.
+                </p>
+                <button
+                  id="delete-listing-btn"
+                  type="button"
+                  className="btn btn-danger-outline"
+                  style={{ width: '100%', height: 42 }}
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  {Icons.trash} Delete Listing
+                </button>
+              </div>
+            )}
           </div>
         </aside>
       </div>
@@ -429,6 +487,57 @@ export default function ListingDetail() {
           title={vehicleTitle}
           onClose={() => setShowFinance(false)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-backdrop" onClick={() => !deleting && setShowDeleteModal(false)}>
+          <div className="modal-dialog delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--red)', display: 'flex' }}>{Icons.trash}</span>
+                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>Delete Listing</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => !deleting && setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: 12, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                Are you sure you want to permanently delete <strong>{vehicleTitle}</strong>?
+              </p>
+              <div className="delete-warning-box">
+                <span style={{ display: 'flex', color: 'var(--red)', flexShrink: 0, marginTop: 2 }}>{Icons.alertTriangle}</span>
+                <span>
+                  This action is permanent and cannot be undone. The listing will be removed immediately from the marketplace and server database.
+                </span>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDeleteListing}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

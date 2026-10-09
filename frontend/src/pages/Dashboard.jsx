@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getListings, getConsultations } from '../api';
+import { toast } from '../context/ToastContext';
+import { getListings, getConsultations, deleteListing } from '../api';
 import ListingCard, { ListingCardSkeleton } from '../components/ListingCard';
 import { Icons } from '../components/Icons';
 import './Dashboard.css';
@@ -11,7 +12,9 @@ export default function Dashboard() {
   const [listings, setListings] = useState([]);
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('mine');
+  const [listingToDelete, setListingToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -37,8 +40,24 @@ export default function Dashboard() {
     return <Navigate to="/" replace />;
   }
 
+  const isListingOwner = (l) => {
+    if (!user || !l) return false;
+    if (user.role === 'admin') return true;
+    if (l.seller_id && Number(user.id) === Number(l.seller_id)) return true;
+    if (l.seller_email && user.email?.toLowerCase() === l.seller_email?.toLowerCase()) return true;
+    try {
+      const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
+      return local.some((item) => String(item.id) === String(l.id));
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const myListings = listings.filter(isListingOwner);
+
   const counts = {
     total: listings.length,
+    mine: myListings.length,
     active: listings.filter((l) => l.status === 'active').length,
     consultations: consultations.length,
     verified: listings.filter((l) => (l.transparency_score || 0) >= 90).length,
@@ -46,6 +65,8 @@ export default function Dashboard() {
 
   const filtered = activeTab === 'all'
     ? listings
+    : activeTab === 'mine'
+    ? myListings
     : activeTab === 'active'
     ? listings.filter((l) => l.status === 'active')
     : [];
@@ -104,6 +125,13 @@ export default function Dashboard() {
 
         {/* Tab Navigation */}
         <div className="dash-tabs-bar">
+          <button
+            type="button"
+            className={`dash-tab-btn ${activeTab === 'mine' ? 'active' : ''}`}
+            onClick={() => setActiveTab('mine')}
+          >
+            My Listings ({counts.mine})
+          </button>
           <button
             type="button"
             className={`dash-tab-btn ${activeTab === 'consultations' ? 'active' : ''}`}
@@ -222,12 +250,95 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="dash-listings-grid">
-            {filtered.map((l) => (
-              <ListingCard key={l.id} listing={l} showStatus />
-            ))}
+            {filtered.map((l) => {
+              const owned = isListingOwner(l);
+              return (
+                <div key={l.id} className="dash-card-wrapper">
+                  <ListingCard listing={l} showStatus />
+                  {owned && (
+                    <div className="dash-card-owner-bar">
+                      <span className="dash-card-owner-tag">
+                        {Icons.shield} Your Listing
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger-outline dash-card-delete-btn"
+                        onClick={() => setListingToDelete(l)}
+                        title="Delete this listing"
+                      >
+                        {Icons.trash} Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {listingToDelete && (
+        <div className="modal-backdrop" onClick={() => !deleting && setListingToDelete(null)}>
+          <div className="modal-dialog delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--red)', display: 'flex' }}>{Icons.trash}</span>
+                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>Delete Listing</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => !deleting && setListingToDelete(null)}
+                disabled={deleting}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: 12, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                Are you sure you want to permanently delete <strong>{listingToDelete.year} {listingToDelete.make} {listingToDelete.model}</strong>?
+              </p>
+              <div className="delete-warning-box">
+                <span style={{ display: 'flex', color: 'var(--red)', flexShrink: 0, marginTop: 2 }}>{Icons.alertTriangle}</span>
+                <span>
+                  This action is permanent and cannot be undone. The listing will be removed immediately from the marketplace and server database.
+                </span>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setListingToDelete(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await deleteListing(listingToDelete.id);
+                    setListings((prev) => prev.filter((item) => String(item.id) !== String(listingToDelete.id)));
+                    toast.success('Listing permanently deleted.');
+                    setListingToDelete(null);
+                  } catch (err) {
+                    toast.error(err.response?.data?.detail || 'Failed to delete listing.');
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

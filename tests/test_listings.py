@@ -512,7 +512,86 @@ class TestAdminStatusUpdate:
 
 
 # ===================================================================
-# 6. VerificationLog Model Integrity
+# 6. Listing Deletion Security & Permissions
+# ===================================================================
+
+class TestListingDeletionSecurity:
+    """Tests ensuring only the owner or an admin can delete a listing."""
+
+    def test_owner_can_delete_own_listing(self, db):
+        seller = _make_seller(db)
+        create_resp = client.post(
+            "/listings/",
+            json=VALID_LISTING_PAYLOAD,
+            headers=_auth_header(_token_for(seller)),
+        )
+        assert create_resp.status_code == 201
+        listing_id = create_resp.json()["id"]
+
+        del_resp = client.delete(
+            f"/listings/{listing_id}",
+            headers=_auth_header(_token_for(seller)),
+        )
+        assert del_resp.status_code == 204
+
+        # Verify listing is deleted
+        assert db.get(Listing, listing_id) is None
+
+    def test_non_owner_cannot_delete_listing(self, db):
+        seller = _make_seller(db)
+        buyer = _make_buyer(db)
+        create_resp = client.post(
+            "/listings/",
+            json=VALID_LISTING_PAYLOAD,
+            headers=_auth_header(_token_for(seller)),
+        )
+        assert create_resp.status_code == 201
+        listing_id = create_resp.json()["id"]
+
+        del_resp = client.delete(
+            f"/listings/{listing_id}",
+            headers=_auth_header(_token_for(buyer)),
+        )
+        assert del_resp.status_code == 403
+        assert "You do not have permission to delete this listing." in del_resp.json()["detail"]
+
+        # Verify listing still exists
+        assert db.get(Listing, listing_id) is not None
+
+    def test_admin_can_delete_any_listing(self, db):
+        seller = _make_seller(db)
+        admin = _make_admin(db)
+        create_resp = client.post(
+            "/listings/",
+            json=VALID_LISTING_PAYLOAD,
+            headers=_auth_header(_token_for(seller)),
+        )
+        assert create_resp.status_code == 201
+        listing_id = create_resp.json()["id"]
+
+        del_resp = client.delete(
+            f"/listings/{listing_id}",
+            headers=_auth_header(_token_for(admin)),
+        )
+        assert del_resp.status_code == 204
+        assert db.get(Listing, listing_id) is None
+
+    def test_unauthenticated_cannot_delete_listing(self, db):
+        seller = _make_seller(db)
+        create_resp = client.post(
+            "/listings/",
+            json=VALID_LISTING_PAYLOAD,
+            headers=_auth_header(_token_for(seller)),
+        )
+        listing_id = create_resp.json()["id"]
+
+        del_resp = client.delete(f"/listings/{listing_id}")
+        assert del_resp.status_code == 401
+        assert db.get(Listing, listing_id) is not None
+
+
+# ===================================================================
+# 7. VerificationLog Model Integrity
 # ===================================================================
 
 class TestVerificationLogModel:

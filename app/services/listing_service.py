@@ -227,13 +227,13 @@ def update_listing_status(
     return listing
 
 
-def delete_listing(db: Session, listing_id: int, seller_id: int) -> bool:
-    """Delete a listing only if it belongs to the authenticated seller."""
+def delete_listing(db: Session, listing_id: int, seller_id: int, is_admin: bool = False) -> bool:
+    """Delete a listing only if it belongs to the authenticated seller or caller is admin."""
     listing: Optional[Listing] = db.get(Listing, listing_id)
     if listing is None:
         return False
 
-    if listing.seller_id != seller_id:
+    if listing.seller_id != seller_id and not is_admin:
         return False
 
     db.delete(listing)

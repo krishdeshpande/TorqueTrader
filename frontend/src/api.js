@@ -513,14 +513,31 @@ export const updateListingStatus = (id, data) => api.patch(`/listings/${id}/stat
   return res;
 });
 
-export const deleteListing = (id) => {
+export const deleteListing = async (id) => {
+  // Prune from local cache immediately
   try {
     const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
     const filtered = local.filter((x) => String(x.id) !== String(id));
     localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
     localStorage.removeItem('tt_user_listings');
+    localStorage.removeItem('tt_synced_listings');
   } catch (_) {}
-  return api.delete(`/listings/${id}`).catch(() => ({ success: true }));
+
+  // If local offline mock ID, local prune is sufficient
+  if (Number(id) > 1000000000) {
+    return { success: true };
+  }
+
+  try {
+    const res = await api.delete(`/listings/${id}`);
+    return res;
+  } catch (err) {
+    // If permission denied (403) or unauthenticated (401), rethrow to inform UI
+    if (err.response?.status === 403 || err.response?.status === 401) {
+      throw err;
+    }
+    return { success: true };
+  }
 };
 
 // ── Leads ────────────────────────────────────────────────────────────────

@@ -702,3 +702,76 @@
   .sidebar-sticky-panel { position: static; }
   .specs-matrix-table td { width: 50% !important; display: inline-block; box-sizing: border-box; }
 }
+
+/* ── Owner Controls & Deletion ────────────────────────────────────────────── */
+.detail-badge-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1E40AF;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-owner-card {
+  background: var(--surface);
+  border: 1px solid #BFDBFE;
+  border-left: 3px solid #2563EB;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.owner-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.owner-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.owner-card-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1E40AF;
+  background: #DBEAFE;
+  padding: 1px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.owner-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.delete-confirm-modal {
+  max-width: 480px;
+}
+
+.delete-warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--red-light);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 0.82rem;
+  color: #991B1B;
+  line-height: 1.45;
+}
+

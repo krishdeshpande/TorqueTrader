@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.listing import EngineConfig, ListingStatus
+from app.models.listing import EngineConfig, ListingStatus, Listing
 from app.models.user import User, UserRole, UserStatus
 from app.schemas.listing import ListingCreate, ListingResponse, ListingStatusUpdate, RCLookupResponse
 from app.services import listing_service
@@ -172,13 +172,23 @@ def delete_listing(
     db: Session = Depends(get_db),
 ):
     """Delete a listing if owned by the current user."""
-    success = listing_service.delete_listing(
+    listing = db.get(Listing, listing_id)
+    if not listing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Listing not found.",
+        )
+
+    is_admin = current_user.role == UserRole.admin if hasattr(UserRole, "admin") else str(current_user.role) == "admin"
+    if listing.seller_id != current_user.id and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to delete this listing.",
+        )
+
+    listing_service.delete_listing(
         db=db,
         listing_id=listing_id,
         seller_id=current_user.id,
+        is_admin=is_admin,
     )
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Listing not found or you do not have permission to delete it.",
-        )

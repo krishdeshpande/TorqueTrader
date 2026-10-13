@@ -19,7 +19,11 @@ from app.models.base import Base  # noqa: E402
 import app.models  # noqa: E402, F401  — register all ORM models
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Alembic stores this value in ConfigParser, where a literal '%' starts an
+# interpolation expression. PostgreSQL passwords are commonly URL-encoded
+# (for example '@' becomes '%40'), so escape percent signs for ConfigParser
+# while preserving the actual URL passed to SQLAlchemy.
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

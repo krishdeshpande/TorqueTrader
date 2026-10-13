@@ -33,6 +33,15 @@ def upgrade() -> None:
     bind = op.get_bind()
     is_postgresql = bind.dialect.name == "postgresql"
 
+    # Revision 001 uses SQLAlchemy metadata to establish tables on existing
+    # deployments.  When it is run against a database created by the app,
+    # these blog tables may already exist before this historical revision is
+    # reached.  Record this revision without attempting to recreate them.
+    existing_tables = set(sa.inspect(bind).get_table_names())
+    blog_tables = {"blog_tags", "blog_posts", "blog_post_tags", "blog_reports"}
+    if blog_tables.issubset(existing_tables):
+        return
+
     # ── 1. Create native enum type for PostgreSQL ──────────────────────────
     if is_postgresql:
         op.execute(

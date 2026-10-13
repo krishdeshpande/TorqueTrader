@@ -26,6 +26,11 @@ def test_production_settings_require_explicit_services():
         Settings(**production_settings(REDIS_URL=None))
 
 
+def test_production_settings_reject_local_sqlite_database():
+    with pytest.raises(ValidationError, match="DATABASE_URL"):
+        Settings(**production_settings(DATABASE_URL="sqlite:///./torque_trader.db"))
+
+
 def test_production_settings_reject_example_secret():
     with pytest.raises(ValidationError, match="JWT_SECRET_KEY"):
         Settings(**production_settings(JWT_SECRET_KEY="CHANGE_ME_generate_a_64_byte_random_string"))

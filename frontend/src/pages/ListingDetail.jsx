@@ -91,15 +91,7 @@ export default function ListingDetail() {
     user && listing && (
       (listing.seller_id && Number(user.id) === Number(listing.seller_id)) ||
       (listing.seller_email && user.email?.toLowerCase() === listing.seller_email?.toLowerCase()) ||
-      (user.role === 'admin') ||
-      (() => {
-        try {
-          const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-          return local.some((l) => String(l.id) === String(listing.id));
-        } catch (_) {
-          return false;
-        }
-      })()
+      (user.role === 'admin')
     )
   );
 

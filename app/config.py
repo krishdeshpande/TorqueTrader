@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_settings(self):
         if self.ENVIRONMENT == "production":
+            if not self.DATABASE_URL.startswith(("postgres://", "postgresql://", "postgresql+")):
+                raise ValueError(
+                    "DATABASE_URL must point to the shared PostgreSQL database in production"
+                )
             if not self.REDIS_URL:
                 raise ValueError("REDIS_URL is required in production environment")
             if "CHANGE_ME" in self.JWT_SECRET_KEY or len(self.JWT_SECRET_KEY) < 32:

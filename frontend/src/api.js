@@ -271,18 +271,9 @@ export const submitFeedback = async (feedbackData) => {
   };
 };
 
-// ── Listings (Server-Backed Cross-Browser/Device Sync) ──────────────────────
-/**
- * CRITICAL: Listings are NOW stored in PostgreSQL and retrieved via authenticated API.
- * localStorage is used ONLY as a short-term cache for offline resilience.
- * 
- * Data flow:
- * 1. User creates listing → POST /listings/ → stored in PostgreSQL
- * 2. User views listings → GET /listings/ + GET /listings/my → synced from server
- * 3. Cache invalidated after creation/update to ensure fresh data
- * 
- * Cross-browser/device sync: Guaranteed by server-side storage + authenticated API
- */
+// ── Listings (Cloud-authoritative cross-device sync) ────────────────────────
+// A listing is published only after the API has committed it to the shared
+// database. Browser storage is a read cache, never a publishing fallback.
 
 export const getListings = async (params = {}) => {
   let backendListings = [];
@@ -329,19 +320,6 @@ export const getListings = async (params = {}) => {
     }
   }
 
-  const safeSetLocalStorage = (key, value) => {
-    try {
-      localStorage.setItem(key, value);
-    } catch (err) {
-      console.warn(`localStorage quota warning for ${key}:`, err);
-      try {
-        localStorage.removeItem('tt_synced_listings');
-        localStorage.removeItem('tt_user_listings');
-        localStorage.setItem(key, value);
-      } catch (_) {}
-    }
-  };
-
   const ensureImages = (item) => {
     if (item.images && item.images.hero) return item.images;
     return {
@@ -379,43 +357,6 @@ export const getListings = async (params = {}) => {
     });
   });
 
-  // 4. Custom listings created on this device (guarantees permanent instant visibility on this browser)
-  let local = [];
-  try {
-    local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-  } catch (_) {
-    local = [];
-  }
-
-  if (Array.isArray(local)) {
-    local.forEach((item) => {
-      map.set(String(item.id), {
-        ...item,
-        images: ensureImages(item),
-      });
-    });
-
-    // Background sync: if user is authenticated and has local unsynced listings, sync them to cloud
-    if (token && local.length > 0) {
-      const unsynced = local.filter((x) => x._needs_sync || Number(x.id) > 1000000000);
-      if (unsynced.length > 0) {
-        Promise.all(
-          unsynced.map(async (item) => {
-            try {
-              const { id, _needs_sync, ...postData } = item;
-              const syncRes = await api.post('/listings/', postData);
-              if (syncRes?.data) {
-                const cur = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-                const updated = cur.map((l) => (String(l.id) === String(id) ? syncRes.data : l));
-                safeSetLocalStorage('tt_custom_listings', JSON.stringify(updated));
-              }
-            } catch (_) {}
-          })
-        ).catch(() => {});
-      }
-    }
-  }
-
   let all = Array.from(map.values());
 
   // Apply search & faceted filters
@@ -449,63 +390,19 @@ export const getListings = async (params = {}) => {
 };
 
 export const createListing = async (data) => {
-  let createdEntry = null;
+  // Let failures reach the UI. Treating an unsuccessful request as a published
+  // listing caused device-only entries that were invisible to other users.
+  const res = await api.post('/listings/', data);
 
-  // 1. Post to cloud database on Render/Supabase
-  try {
-    const res = await api.post('/listings/', data);
-    if (res?.data) {
-      createdEntry = res.data;
-    }
-  } catch (err) {
-    console.warn('Backend sync failed, storing to local device cache:', err);
+  if (!res?.data?.id) {
+    throw new Error('The listing service did not confirm that your listing was saved.');
   }
 
-  // 2. Fallback entry if network was offline or backend sleeping
-  if (!createdEntry) {
-    createdEntry = {
-      ...data,
-      id: Date.now(),
-      status: 'active',
-      transparency_score: 94,
-      created_at: new Date().toISOString(),
-      images: data.images,
-      _needs_sync: true,
-    };
-  }
+  // Invalidate only read caches; the authoritative record is on the API.
+  localStorage.removeItem('tt_user_listings');
+  localStorage.removeItem('tt_synced_listings');
 
-  // Ensure images structure exists
-  if (!createdEntry.images || !createdEntry.images.hero) {
-    createdEntry.images = data.images || {
-      hero: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
-      walkaround: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80'],
-      cockpit: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80'],
-      mechanicals: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80'],
-      flaws: [],
-    };
-  }
-
-  // 3. Store in localStorage safely so it is immediately and permanently visible on this device
-  try {
-    const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-    const filtered = local.filter((x) => String(x.id) !== String(createdEntry.id));
-    filtered.unshift(createdEntry);
-    localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
-  } catch (storageErr) {
-    console.warn('LocalStorage save error:', storageErr);
-    try {
-      localStorage.removeItem('tt_synced_listings');
-      localStorage.removeItem('tt_user_listings');
-      localStorage.setItem('tt_custom_listings', JSON.stringify([createdEntry]));
-    } catch (_) {}
-  }
-
-  // Invalidate user listings cache so next call fetches fresh data
-  try {
-    localStorage.removeItem('tt_user_listings');
-  } catch (_) {}
-
-  return { data: createdEntry };
+  return res;
 };
 
 export const updateListingStatus = (id, data) => api.patch(`/listings/${id}/status`, data).then(res => {
@@ -514,30 +411,10 @@ export const updateListingStatus = (id, data) => api.patch(`/listings/${id}/stat
 });
 
 export const deleteListing = async (id) => {
-  // Prune from local cache immediately
-  try {
-    const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-    const filtered = local.filter((x) => String(x.id) !== String(id));
-    localStorage.setItem('tt_custom_listings', JSON.stringify(filtered));
-    localStorage.removeItem('tt_user_listings');
-    localStorage.removeItem('tt_synced_listings');
-  } catch (_) {}
-
-  // If local offline mock ID, local prune is sufficient
-  if (Number(id) > 1000000000) {
-    return { success: true };
-  }
-
-  try {
-    const res = await api.delete(`/listings/${id}`);
-    return res;
-  } catch (err) {
-    // If permission denied (403) or unauthenticated (401), rethrow to inform UI
-    if (err.response?.status === 403 || err.response?.status === 401) {
-      throw err;
-    }
-    return { success: true };
-  }
+  const res = await api.delete(`/listings/${id}`);
+  localStorage.removeItem('tt_user_listings');
+  localStorage.removeItem('tt_synced_listings');
+  return res;
 };
 
 // ── Leads ────────────────────────────────────────────────────────────────

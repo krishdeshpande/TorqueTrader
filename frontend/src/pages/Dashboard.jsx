@@ -45,12 +45,7 @@ export default function Dashboard() {
     if (user.role === 'admin') return true;
     if (l.seller_id && Number(user.id) === Number(l.seller_id)) return true;
     if (l.seller_email && user.email?.toLowerCase() === l.seller_email?.toLowerCase()) return true;
-    try {
-      const local = JSON.parse(localStorage.getItem('tt_custom_listings') || '[]');
-      return local.some((item) => String(item.id) === String(l.id));
-    } catch (_) {
-      return false;
-    }
+    return false;
   };
 
   const myListings = listings.filter(isListingOwner);

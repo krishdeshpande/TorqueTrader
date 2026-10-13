@@ -353,7 +353,11 @@ export default function CreateListing() {
       toast.success('Superbike listed & published to the catalogue successfully!');
       navigate('/listings');
     } catch (err) {
-      toast.error(err.response?.data?.detail || err.message || 'Failed to submit listing. Please verify required fields.');
+      toast.error(
+        err.response?.data?.detail ||
+        err.message ||
+        'Your listing was not published because it could not be saved to the marketplace. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

@@ -1,43 +1,120 @@
-from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 import logging
 
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
 from app.config import settings
-from app.database import engine
+from app.database import engine, SessionLocal
 from app.models.base import Base
-import app.models  # noqa: F401 — registers all ORM models so Base.metadata is complete
-from app.routers import auth, media, leads, listings, advisor, feedback, blog
+
+# Register all models so Base.metadata contains every ORM table.
+import app.models  # noqa: F401
+
+from app.routers import (
+    auth,
+    media,
+    leads,
+    listings,
+    advisor,
+    feedback,
+    blog,
+)
+
+from app.services.blog_tag_seed import ensure_default_blog_tags
+
 
 logger = logging.getLogger(__name__)
 
-# ── Create / ensure all database tables exist on boot (SQLite / PostgreSQL / Supabase) ─
+
+# ============================================================
+# DATABASE INITIALIZATION
+# ============================================================
+
+# Create missing tables represented in the registered ORM metadata.
+#
+# This does not replace Alembic migrations. It also does not modify
+# the structure of existing tables.
+#
+# If initialization fails, let the exception propagate instead of
+# starting the application with an unusable database.
+Base.metadata.create_all(bind=engine)
+
+
+# ============================================================
+# DEFAULT BLOG TAG INITIALIZATION
+# ============================================================
+
+# Ensure the predefined blog tags exist.
+#
+# Existing tags are preserved. Only missing tags are inserted.
+# The seeder commits only when it creates new tags.
+#
+# If seeding fails, log the exception and allow the application
+# to start. The error will be visible in the application logs.
+# This preserves the previous error-handling behaviour for seeding.
+
 try:
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    logger.warning("Database schema init notice: %s", e)
+    with SessionLocal() as db:
+        created_count = ensure_default_blog_tags(db)
 
-# ── Rate limiter ──────────────────────────────────────────────────────────────
-limiter = Limiter(key_func=get_remote_address)
+        logger.info(
+            "Blog tag initialization completed. New tags created: %d",
+            created_count,
+        )
 
-# ── App ───────────────────────────────────────────────────────────────────────
+except Exception:
+    logger.exception(
+        "Blog tag initialization failed. "
+        "Check database connectivity and application logs."
+    )
+
+
+# ============================================================
+# RATE LIMITING
+# ============================================================
+
+limiter = Limiter(
+    key_func=get_remote_address,
+)
+
+
+# ============================================================
+# FASTAPI APPLICATION
+# ============================================================
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description=(
-        "TorqueTrader API — a transparency-focused C2C marketplace for premium superbikes."
+        "TorqueTrader API — a transparency-focused "
+        "C2C marketplace for premium superbikes."
     ),
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
-origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",")]
+app.state.limiter = limiter
+
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
+)
+
+
+# ============================================================
+# CORS
+# ============================================================
+
+origins = [
+    origin.strip()
+    for origin in settings.ALLOWED_ORIGINS.split(",")
+]
+
 if "*" in origins or not origins:
     app.add_middleware(
         CORSMiddleware,
@@ -46,6 +123,7 @@ if "*" in origins or not origins:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
 else:
     app.add_middleware(
         CORSMiddleware,
@@ -55,17 +133,37 @@ else:
         allow_headers=["*"],
     )
 
-# ── Security headers ──────────────────────────────────────────────────────────
+
+# ============================================================
+# SECURITY HEADERS
+# ============================================================
+
 @app.middleware("http")
-async def add_security_headers(request: Request, call_next):
+async def add_security_headers(
+    request: Request,
+    call_next,
+):
     response: Response = await call_next(request)
+
     response.headers["X-Frame-Options"] = "DENY"
+
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    response.headers["Referrer-Policy"] = (
+        "strict-origin-when-cross-origin"
+    )
+
+    response.headers["Strict-Transport-Security"] = (
+        "max-age=31536000; includeSubDomains"
+    )
+
     return response
 
-# ── Routers ───────────────────────────────────────────────────────────────────
+
+# ============================================================
+# ROUTERS
+# ============================================================
+
 app.include_router(auth.router)
 app.include_router(media.router)
 app.include_router(leads.router)
@@ -74,12 +172,33 @@ app.include_router(advisor.router)
 app.include_router(feedback.router)
 app.include_router(blog.router)
 
-# ── Health check ──────────────────────────────────────────────────────────────
-@app.get("/health", tags=["Ops"], summary="Liveness probe")
-def health():
-    return {"status": "ok", "version": settings.VERSION}
 
-@app.get("/", tags=["Ops"])
+# ============================================================
+# HEALTH CHECK
+# ============================================================
+
+@app.get(
+    "/health",
+    tags=["Ops"],
+    summary="Liveness probe",
+)
+def health():
+    return {
+        "status": "ok",
+        "version": settings.VERSION,
+    }
+
+
+# ============================================================
+# ROOT ENDPOINT
+# ============================================================
+
+@app.get(
+    "/",
+    tags=["Ops"],
+)
 @limiter.limit("5/minute")
 def root(request: Request):
-    return {"message": f"Welcome to {settings.PROJECT_NAME}"}
+    return {
+        "message": f"Welcome to {settings.PROJECT_NAME}",
+    }

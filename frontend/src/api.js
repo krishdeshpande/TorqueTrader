@@ -193,6 +193,26 @@ export const analyzeVehicleAdvisory = async (diagnosticData) => {
   };
 };
 
+export const sendAdvisorChatMessage = async (messages, diagnosticContext) => {
+  try {
+    const res = await api.post('/advisor/chat', {
+      messages,
+      diagnostic_context: diagnosticContext,
+    });
+    if (res.data?.content) {
+      return res.data;
+    }
+  } catch (err) {
+    // Fallback if network or server issue
+  }
+
+  const latestMsg = messages[messages.length - 1]?.content || '';
+  return {
+    role: 'assistant',
+    content: 'Regarding **' + latestMsg + '**: In Indian road conditions, always evaluate low-speed suspension compliance over speed breakers and verified service history before placing a deposit. Feel free to ask about specific variant trims, real maintenance bills, or book a 1-on-1 strategy call with our human consulting team.'
+  };
+};
+
 export const bookConsultation = async (bookingData) => {
   const newLead = {
     ...bookingData,

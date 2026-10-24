@@ -1,377 +1,672 @@
-/* Flat Architectural Automotive Advisor Styles */
+/* ── TorqueTrader Architectural Advisor & Interactive Chatbot ─────────────── */
 
 .advisor-root {
   padding-top: 92px;
   background: var(--bg);
   min-height: 100vh;
-  padding-bottom: 80px;
+  padding-bottom: 90px;
 }
 
-/* ── Hero Section ─────────────────────────────────────────────────────────── */
+/* Hero Section */
 .advisor-hero-section {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 40px 0 32px;
+  padding: 36px 0 28px;
 }
 
 .advisor-hero-inner {
-  max-width: 900px;
+  max-width: 860px;
 }
 
 .advisor-main-title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 3.8vw, 2.8rem);
+  font-size: clamp(2rem, 3.5vw, 2.6rem);
   font-weight: 800;
   color: var(--text-main);
   line-height: 1.15;
   letter-spacing: -0.5px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .advisor-hero-desc {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
-  line-height: 1.65;
-  margin-bottom: 24px;
+  line-height: 1.6;
 }
 
-.quick-scenarios-wrapper {
+.advisor-workspace-wrap {
+  max-width: 960px;
+  margin: 32px auto 0;
+}
+
+/* ── Diagnostic Questionnaire Card ────────────────────────────────────────── */
+.diagnostic-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.diag-progress-bar-wrap {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+}
+
+.diag-progress-header {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid var(--border);
-  padding-top: 18px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.scenarios-heading {
+.diag-step-count {
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.scenarios-chip-grid {
+.diag-step-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.diag-track {
+  width: 100%;
+  height: 4px;
+  background: #E5E7EB;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.diag-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.diag-body {
+  padding: 32px 28px;
+}
+
+.diag-step-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.diag-q-meta {
+  margin-bottom: 24px;
+}
+
+.q-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-border);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.diag-question-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.diag-question-sub {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* Quick-Tap Cards Grid */
+.chip-cards-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.chip-cards-grid.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chip-cards-grid.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.chip-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-card:hover {
+  border-color: var(--border-dark);
+  background: var(--bg-subtle);
+}
+
+.chip-card.selected {
+  border-color: var(--accent);
+  background: #FFF5F5;
+}
+
+.chip-card-icon {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.chip-card-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.chip-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.chip-card.selected .chip-card-title {
+  color: var(--accent);
+}
+
+.chip-check {
+  display: flex;
+  color: var(--accent);
+}
+
+.chip-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Pill Selectors Grid */
+.pill-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pill-btn:hover {
+  border-color: var(--border-dark);
+  background: var(--bg-subtle);
+}
+
+.pill-btn.active {
+  border-color: var(--accent);
+  background: #FFF5F5;
+  color: var(--accent);
+}
+
+.pill-icon {
+  display: flex;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.step-actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.diag-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Verdict & Structured Dossier ─────────────────────────────────────────── */
+.verdict-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.verdict-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  gap: 16px;
+}
+
+.verdict-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.verdict-main-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.verdict-meta-strip {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.scenario-chip-btn {
+.meta-pill {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
   background: var(--bg-subtle);
   border: 1px solid var(--border);
+  padding: 2px 8px;
   border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.scenario-chip-btn:hover {
-  background: var(--surface);
-  border-color: var(--text-muted);
-}
-
-/* ── Workspace Grid ───────────────────────────────────────────────────────── */
-.advisor-workspace-grid {
-  display: grid;
-  grid-template-columns: 460px 1fr;
-  gap: 32px;
-  padding-top: 32px;
-  align-items: start;
-}
-
-/* Left Input Card */
-.advisor-input-card {
+/* Dossier Rendered Box */
+.dossier-rendered-box {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 28px;
 }
 
-.card-top-head {
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 20px;
+.dossier-section-head {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
 }
 
-.card-top-title {
+.dossier-section-head:first-child {
+  margin-top: 0;
+}
+
+.section-title {
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-main);
-  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.card-top-sub {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.diagnostic-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Priority Pills */
-.priority-label-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.priority-count-tag {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.priorities-pill-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.priority-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  text-align: left;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
-}
-
-.priority-pill:hover {
-  background: var(--surface);
-}
-
-.priority-pill.active {
-  background: #111827;
-  color: #FFFFFF;
-  border-color: #111827;
-}
-
-.pill-check {
-  color: #4ADE80;
-  display: flex;
-}
-
-.generate-dossier-btn {
-  height: 48px;
+.dossier-body-para {
   font-size: 0.92rem;
-  margin-top: 8px;
+  color: var(--text-main);
+  line-height: 1.65;
+  margin-bottom: 14px;
 }
 
-/* ── Right Output / Dossier View ─────────────────────────────────────────── */
-.advisor-output-col {
+.dossier-list-wrap {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
-.dossier-results-box {
+.dossier-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.55;
+}
+
+.bullet-sq {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  margin-top: 8px;
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
+.dossier-hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+/* ── Interactive Follow-up Chat Console ───────────────────────────────────── */
+.advisory-chat-console {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
 }
 
-.dossier-results-header {
-  padding: 20px 24px;
-  background: var(--bg-subtle);
-  border-bottom: 1px solid var(--border);
-}
-
-.dossier-tag {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 1px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.dossier-title {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--text-main);
-  line-height: 1.25;
-}
-
-.dossier-meta-budget {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  display: block;
-  margin-top: 4px;
-}
-
-.dossier-rendered-content {
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.md-heading {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-top: 8px;
-  line-height: 1.25;
-}
-
-.md-para {
-  font-size: 0.92rem;
-  color: var(--text-main);
-  line-height: 1.7;
-}
-
-.md-list-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 18px;
-}
-
-.md-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.88rem;
-  color: var(--text-main);
-  line-height: 1.5;
-}
-
-.md-bullet {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.md-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 8px 0;
-}
-
-/* Callout Box */
-.dossier-consult-callout {
-  margin: 0 28px 28px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 20px;
+.chat-console-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  background: #111827;
+  color: #FFFFFF;
+  padding: 16px 20px;
 }
 
-.callout-title {
-  font-family: var(--font-display);
-  font-size: 1rem;
+.chat-avatar-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-avatar-icon {
+  font-size: 1.6rem;
+}
+
+.chat-bot-title {
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 4px;
+  color: #FFFFFF;
+  margin: 0;
 }
 
-.callout-desc {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.45;
+.chat-bot-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #10B981;
 }
 
-.callout-actions {
+.guardrail-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #9CA3AF;
+  border: 1px solid #374151;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.chat-feed-box {
+  padding: 20px;
+  max-height: 420px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 16px;
+  background: #F9FAFB;
 }
 
-/* Welcome Box */
-.advisor-welcome-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
+.chat-bubble-row {
+  display: flex;
+  width: 100%;
+}
+
+.chat-bubble-row.user {
+  justify-content: flex-end;
+}
+
+.chat-bubble-row.assistant {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 14px 16px;
   border-radius: var(--radius);
-  padding: 40px 32px;
-  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
-.welcome-shield-icon {
-  width: 52px;
-  height: 52px;
+.chat-bubble-row.user .chat-bubble {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-bottom-right-radius: 2px;
+}
+
+.chat-bubble-row.assistant .chat-bubble {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  border-bottom-left-radius: 2px;
+}
+
+.bubble-role {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.chat-bubble-row.user .bubble-role {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.chat-bubble-row.assistant .bubble-role {
+  color: var(--text-muted);
+}
+
+.bubble-text {
+  white-space: pre-wrap;
+}
+
+.chat-bubble.loading {
+  padding: 12px 18px;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 16px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* Suggested Prompts Strip */
+.chat-prompts-strip {
+  padding: 10px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.prompts-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.prompts-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.prompt-chip-btn {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.welcome-title {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
+.prompt-chip-btn:hover:not(:disabled) {
+  background: var(--accent-light);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* Chat Input Bar */
+.chat-input-bar {
+  display: flex;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  gap: 12px;
+}
+
+.chat-text-input {
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
   color: var(--text-main);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.chat-text-input:focus {
+  border-color: var(--text-main);
+  background: #FFFFFF;
+}
+
+.chat-send-btn {
+  height: 44px;
+  padding: 0 20px;
+}
+
+/* ── Bridge to Human Consulting ───────────────────────────────────────────── */
+.consult-bridge-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111827;
+  color: #FFFFFF;
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  gap: 28px;
+}
+
+.bridge-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #F59E0B;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.bridge-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #FFFFFF;
   margin-bottom: 8px;
 }
 
-.welcome-desc {
-  font-size: 0.92rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  max-width: 540px;
-  margin: 0 auto 28px;
+.bridge-desc {
+  font-size: 0.85rem;
+  color: #D1D5DB;
+  line-height: 1.55;
+  max-width: 620px;
 }
 
-.advisory-pillars-card {
+.bridge-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  text-align: left;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 20px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.pillar-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 0.88rem;
-  color: var(--text-main);
-}
+/* Responsive Rules */
+@media (max-width: 768px) {
+  .chip-cards-grid.grid-3,
+  .chip-cards-grid.grid-2 {
+    grid-template-columns: 1fr;
+  }
 
-.pillar-num {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: var(--accent);
-  font-size: 0.8rem;
-}
+  .pill-selector-grid {
+    grid-template-columns: 1fr;
+  }
 
-@media (max-width: 960px) {
-  .advisor-workspace-grid { grid-template-columns: 1fr; }
-  .dossier-consult-callout { flex-direction: column; align-items: flex-start; }
-  .callout-actions { width: 100%; }
+  .verdict-top-bar {
+    flex-direction: column;
+  }
+
+  .consult-bridge-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .bridge-actions {
+    width: 100%;
+  }
+
+  .bridge-actions .btn {
+    width: 100%;
+  }
+
+  .chat-bubble {
+    max-width: 92%;
+  }
 }

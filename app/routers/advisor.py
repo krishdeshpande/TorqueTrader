@@ -15,7 +15,7 @@ import resend
 from app.database import get_db
 from app.config import settings
 from app.models.consultation import ConsultationBooking
-from app.services.auto_advisor import generate_advisory_analysis
+from app.services.auto_advisor import generate_advisory_analysis, generate_advisor_chat_response
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +23,27 @@ router = APIRouter(prefix="/advisor", tags=["Automotive Advisory & Consulting"])
 
 
 class DiagnosticAnalysisRequest(BaseModel):
+    category: Optional[str] = Field(default="Car / SUV")
     budget: str = Field(default="₹12L - ₹20L")
     condition: str = Field(default="New or Used")
     city: str = Field(default="Mumbai / Delhi-NCR / Bangalore")
     usage: str = Field(default="Daily Commute & Highway")
+    transmission: Optional[str] = Field(default="Any Automatic / No Preference")
     priorities: List[str] = Field(default_factory=lambda: ["Safety", "Comfort", "Low Maintenance"])
+    features: Optional[List[str]] = Field(default_factory=list)
+    maintenance_mindset: Optional[str] = Field(default="Zero Drama")
     contenders: Optional[str] = Field(default=None)
     notes: Optional[str] = Field(default=None)
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(default="user")
+    content: str
+
+
+class AdvisorChatRequest(BaseModel):
+    messages: List[ChatMessage] = Field(default_factory=list)
+    diagnostic_context: Optional[Dict[str, Any]] = None
 
 
 class ConsultationBookingRequest(BaseModel):
@@ -93,6 +107,26 @@ def analyze_vehicle_query(payload: DiagnosticAnalysisRequest) -> Dict[str, Any]:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not generate advisory dossier. Please try again.",
+        )
+
+
+@router.post(
+    "/chat",
+    summary="Interactive multi-turn automotive advisory chat with guardrails",
+)
+def advisor_chat(payload: AdvisorChatRequest) -> Dict[str, Any]:
+    """Interactive conversational follow-up and discussion with the AI automotive consultant."""
+    try:
+        result = generate_advisor_chat_response(
+            messages=[m.model_dump() for m in payload.messages],
+            diagnostic_context=payload.diagnostic_context,
+        )
+        return result
+    except Exception as exc:
+        logger.error("Advisor chat failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not process advisory chat message. Please try again.",
         )
 
 

@@ -1,91 +1,116 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { analyzeVehicleAdvisory } from '../api';
+import { analyzeVehicleAdvisory, sendAdvisorChatMessage } from '../api';
 import { toast } from '../context/ToastContext';
 import { Icons } from '../components/Icons';
 import ConsultingBookingModal from '../components/ConsultingBookingModal';
 import './Advisor.css';
 
-const QUICK_SCENARIOS = [
-  {
-    label: "Family SUV under ₹18L (Safety + Ride Comfort first)",
-    budget: "₹12L - ₹20L",
-    condition: "New",
-    city: "Mumbai / Bangalore",
-    usage: "Daily City Commute + Family Roadtrips",
-    priorities: ["Safety & Crash Rating", "Ride Comfort & Pothole Absorption", "Family / Backseat Space"],
-    contenders: "Hyundai Creta vs Skoda Kushaq vs Honda Elevate",
-    notes: "Prioritizing high safety ratings, stress-free automatic, and smooth ride over potholes for elderly parents."
-  },
-  {
-    label: "Used fun-to-drive daily under ₹8L (Polo TSI vs City vs Figo)",
-    budget: "₹4L - ₹8L",
-    condition: "Used",
-    city: "Bangalore",
-    usage: "Daily Office Commute + Weekend Fun",
-    priorities: ["Performance & Handling", "Low Maintenance / Reliability", "Safety & Crash Rating"],
-    contenders: "VW Polo 1.0 TSI vs Honda City 1.5 i-VTEC vs Ford Figo 1.5 TDCi",
-    notes: "Need an engaging, solid daily driver with reasonable spare parts availability and strong chassis balance."
-  },
-  {
-    label: "Virtus GT vs Slavia 1.5 vs Verna Turbo",
-    budget: "₹15L - ₹22L",
-    condition: "New",
-    city: "Delhi-NCR",
-    usage: "Highway Cruising + City Traffic",
-    priorities: ["Performance & Handling", "Safety & Crash Rating", "Ride Comfort & Pothole Absorption"],
-    contenders: "VW Virtus GT Plus 1.5 vs Skoda Slavia 1.5 vs Hyundai Verna 1.5 Turbo",
-    notes: "Evaluating long-term DSG reliability vs Verna DCT, high-speed stability, and real-world fuel economy."
-  },
-  {
-    label: "Octavia 1.8 TSI vs BMW 330i F30/G20 (Real Maintenance)",
-    budget: "₹18L - ₹32L",
-    condition: "Used",
-    city: "Mumbai / Pune",
-    usage: "Weekend Drives + Expressway Touring",
-    priorities: ["Performance & Handling", "Low Maintenance / Reliability", "Real-World Fuel Economy"],
-    contenders: "Skoda Octavia 1.8/2.0 TSI vs BMW 330i (F30 / G20)",
-    notes: "Which offers superior long-term ownership peace of mind, water pump/mechatronic failure risks, and service cost."
-  },
-  {
-    label: "First Superbike Upgrade from 390 Duke / 650 Twin",
-    budget: "₹10L - ₹18L",
-    condition: "New or Used",
-    city: "Indian Metros",
-    usage: "Weekend Morning Rides + Occasional Trackdays",
-    priorities: ["Performance & Handling", "Safety & Crash Rating", "Low Maintenance / Reliability"],
-    contenders: "Triumph Street Triple 765 RS vs Kawasaki ZX-10R vs Ducati Monster",
-    notes: "Evaluating engine heat management in Indian traffic, tyre wear costs, and real-world usable torque."
-  }
+const BUDGET_OPTIONS = [
+  { value: "Under ₹1.5L", label: "Under ₹1.5L", desc: "Commuters, used 150-200cc bikes, budget runabouts" },
+  { value: "₹1.5L - ₹3L", label: "₹1.5L - ₹3L", desc: "Entry enthusiast bikes (Duke/Hunter), reliable used cars (Swift/Brio)" },
+  { value: "₹3L - ₹6L", label: "₹3L - ₹6L", desc: "Quarter-litre bikes (390 Duke/650 Twin), solid hatchbacks (Polo/Figo)" },
+  { value: "₹6L - ₹12L", label: "₹6L - ₹12L", desc: "Compact SUVs (Nexon/Brezza), sedans (City), premium bikes" },
+  { value: "₹12L - ₹20L", label: "₹12L - ₹20L", desc: "Mid-size SUVs (Creta/Elevate), dynamic sedans (Virtus/Slavia)" },
+  { value: "₹20L - ₹35L", label: "₹20L - ₹35L", desc: "Executive 4x4s (Scorpio/XUV), Hycross Hybrid, middleweights" },
+  { value: "₹35L - ₹75L", label: "₹35L - ₹75L", desc: "Luxury sports sedans (BMW 330i/M340i), liter-class superbikes" },
+  { value: "₹75L+", label: "₹75L+", desc: "Supercars (Porsche 911), super sedans (M5), exotic machines" },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "Car / SUV", label: "Car / SUV", icon: "🚗" },
+  { value: "Motorcycle / Superbike", label: "Motorcycle / Superbike", icon: "🏍️" },
+  { value: "Open to Either", label: "Open to Either", icon: "⚡" },
+];
+
+const CONDITION_OPTIONS = [
+  { value: "Brand New Showroom Only", label: "Brand New Only", desc: "Full factory warranty, zero previous owner history" },
+  { value: "Pre-Owned / Used Only", label: "Pre-Owned (Max Value)", desc: "Depreciation saved, bigger engine or higher segment" },
+  { value: "New or Used", label: "Open to Both", desc: "Recommend whichever offers the superior value for money" },
+];
+
+const TRANSMISSION_OPTIONS = [
+  { value: "Manual (Pure Driver Engagement)", label: "Manual (6-Speed MT)", desc: "Lowest maintenance, direct clutch control" },
+  { value: "Torque Converter Automatic (Smooth & Reliable)", label: "Torque Converter AT", desc: "Bulletproof in city crawl, zero overheating" },
+  { value: "Dual-Clutch / DSG / DCT (Lightning Fast)", label: "Dual-Clutch / DSG", desc: "Instantaneous shifts, enthusiast driving feel" },
+  { value: "CVT (Relaxed City Commute)", label: "CVT Automatic", desc: "Rubber-band free, seamless city ease" },
+  { value: "Any Automatic / No Preference", label: "Any Automatic / No Pref", desc: "Comfortable for daily traffic, open to any type" },
+];
+
+const USAGE_OPTIONS = [
+  { value: "Daily Bumper-to-Bumper City Traffic", label: "Daily Heavy City Traffic", desc: "Crawl speeds, potholes, tight parking spaces" },
+  { value: "Highway Expressway Touring & Intercity", label: "Highway / Expressway Touring", desc: "100-120 km/h cruising, cross-country trips" },
+  { value: "Mixed 50/50 Commute & Weekend Roadtrips", label: "50/50 Commute + Roadtrips", desc: "Weekday office + weekend highway balance" },
+  { value: "Enthusiast Mountain Twisties / Trackday Fun", label: "Enthusiast / Mountain Ghats", desc: "Spirited driving, corner carving, apex hunting" },
 ];
 
 const PRIORITY_OPTIONS = [
-  "Safety & Crash Rating (5-Star NCAP)",
-  "Ride Comfort & Pothole Absorption",
-  "Real-World Fuel Economy (City Traffic)",
-  "Low Maintenance & Reliability",
-  "Performance & High-Speed Dynamics",
-  "Family Space & Boot Practicality",
-  "Resale Value Stability",
-  "Feature Tech & Screen Quality"
+  "5-Star Crash Safety & Heavy-Duty Build",
+  "Ride Comfort & Pothole / Speedbreaker Absorption",
+  "Real-World Mileage in City Traffic",
+  "Bulletproof Reliability & Inexpensive Spares",
+  "Pure Performance & High-Speed Dynamics",
+  "Rear-Seat Space for Parents/Family & Luggage Boot",
+  "Resale Value Stability & High Liquidity",
+  "Refined NVH & Cabin Sound Insulation"
+];
+
+const FEATURE_OPTIONS = [
+  "Ventilated Front Seats (Summer comfort)",
+  "Wireless Android Auto / Apple CarPlay",
+  "Sunroof / Panoramic Sunroof",
+  "ADAS Safety & 360-Degree Camera",
+  "High Ground Clearance (>190mm)",
+  "Cruise Control (Expressway ease)",
+  "LED Projectors & Cornering Lights",
+  "None / Purely Mechanical Simplicity"
+];
+
+const MAINTENANCE_OPTIONS = [
+  { value: "Zero Drama", label: "\"Zero Drama\" (Fill & Forget)", desc: "Japanese/Korean reliability. Low service bills, cheap parts." },
+  { value: "Enthusiast Care", label: "\"Enthusiast Care\" (Driving Thrill First)", desc: "Happy with European/specialist maintenance for exceptional dynamics." }
+];
+
+const SUGGESTED_FOLLOWUPS = [
+  "What are the realistic maintenance costs after 5 years?",
+  "How does the rear seat comfort compare with family rivals?",
+  "Which specific variant has the highest resale value?",
+  "Is the automatic gearbox safe in heavy monsoon traffic?"
 ];
 
 export default function Advisor() {
-  const [budget, setBudget] = useState('₹12L - ₹20L');
-  const [condition, setCondition] = useState('New or Used');
-  const [city, setCity] = useState('Mumbai / Bangalore / Delhi-NCR');
-  const [usage, setUsage] = useState('Daily City Traffic + Highway Touring');
-  const [priorities, setPriorities] = useState([
-    "Safety & Crash Rating (5-Star NCAP)",
-    "Ride Comfort & Pothole Absorption",
-    "Low Maintenance & Reliability"
-  ]);
-  const [contenders, setContenders] = useState('');
-  const [notes, setNotes] = useState('');
+  // Step in diagnostic flow: 1 to 9 (or 'verdict')
+  const [step, setStep] = useState(1);
 
+  // Diagnostic State
+  const [category, setCategory] = useState("Car / SUV");
+  const [budget, setBudget] = useState("₹12L - ₹20L");
+  const [condition, setCondition] = useState("New or Used");
+  const [transmission, setTransmission] = useState("Any Automatic / No Preference");
+  const [usage, setUsage] = useState("Daily Bumper-to-Bumper City Traffic");
+  const [city, setCity] = useState("Mumbai / Bangalore / Delhi-NCR");
+  const [priorities, setPriorities] = useState([
+    "5-Star Crash Safety & Heavy-Duty Build",
+    "Ride Comfort & Pothole / Speedbreaker Absorption"
+  ]);
+  const [features, setFeatures] = useState(["Wireless Android Auto / Apple CarPlay"]);
+  const [maintenanceMindset, setMaintenanceMindset] = useState("Zero Drama");
+  const [contenders, setContenders] = useState("");
+  const [customNotes, setCustomNotes] = useState("");
+
+  // Result & Chat State
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [selectedConsultTier, setSelectedConsultTier] = useState(null);
+
+  const chatBottomRef = useRef(null);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, chatLoading]);
 
   const togglePriority = (p) => {
     if (priorities.includes(p)) {
@@ -93,53 +118,98 @@ export default function Advisor() {
         setPriorities(priorities.filter((item) => item !== p));
       }
     } else {
-      if (priorities.length < 4) {
+      if (priorities.length < 3) {
         setPriorities([...priorities, p]);
       } else {
-        toast.info('You can select up to 4 top priorities for the most accurate calibration.');
+        toast.info('You can select up to 3 core priorities for the sharpest diagnostic match.');
       }
     }
   };
 
-  const loadScenario = (sc) => {
-    setBudget(sc.budget);
-    setCondition(sc.condition);
-    setCity(sc.city);
-    setUsage(sc.usage);
-    setPriorities(sc.priorities);
-    setContenders(sc.contenders);
-    setNotes(sc.notes);
-    window.scrollTo({ top: 320, behavior: 'smooth' });
+  const toggleFeature = (f) => {
+    if (features.includes(f)) {
+      setFeatures(features.filter((item) => item !== f));
+    } else {
+      setFeatures([...features, f]);
+    }
   };
 
-  const handleGenerate = async (e) => {
-    e?.preventDefault();
+  const handleGenerateDossier = async () => {
     setLoading(true);
     try {
-      const res = await analyzeVehicleAdvisory({
+      const payload = {
+        category,
         budget,
         condition,
-        city,
+        transmission,
         usage,
+        city,
         priorities,
-        contenders: contenders || 'Shortlisted Contenders',
-        notes
-      });
+        features,
+        maintenance_mindset: maintenanceMindset,
+        contenders: contenders.trim() || undefined,
+        notes: customNotes.trim() || undefined,
+      };
+
+      const res = await analyzeVehicleAdvisory(payload);
       setAnalysis(res);
-      toast.success('Automotive advisory dossier generated.');
-      setTimeout(() => {
-        document.getElementById('advisory-results-view')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      setStep('verdict');
+      setChatMessages([
+        {
+          role: 'assistant',
+          content: `I've synthesized your custom automotive dossier based on your **${budget}** budget, **${transmission}** requirement, and **${priorities.join(' & ')}** priority in **${city}**.\n\nYou can ask any follow-up questions below—like maintenance timelines, variant tradeoffs, or specific comparison queries.`
+        }
+      ]);
+      toast.success('Automotive Intelligence dossier generated.');
+      window.scrollTo({ top: 120, behavior: 'smooth' });
     } catch (err) {
-      toast.error('Failed to generate analysis. Please try again.');
+      toast.error('Could not generate advisory. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSendFollowUp = async (textToSend) => {
+    const text = textToSend || chatInput;
+    if (!text.trim() || chatLoading) return;
+
+    const newMessages = [...chatMessages, { role: 'user', content: text.trim() }];
+    setChatMessages(newMessages);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const diagnosticContext = {
+        category,
+        budget,
+        condition,
+        transmission,
+        city,
+        priorities,
+        contenders,
+      };
+
+      const res = await sendAdvisorChatMessage(newMessages, diagnosticContext);
+      if (res && res.content) {
+        setChatMessages([...newMessages, { role: 'assistant', content: res.content }]);
+      }
+    } catch (err) {
+      toast.error('Failed to get answer. Please try again.');
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const restartDiagnostic = () => {
+    setStep(1);
+    setAnalysis(null);
+    setChatMessages([]);
+    window.scrollTo({ top: 100, behavior: 'smooth' });
+  };
+
   return (
     <div className="advisor-root">
-      {/* ── Top Hero Banner ───────────────────────────────────────────────── */}
+      {/* ── Top Header Banner ──────────────────────────────────────────────── */}
       <section className="advisor-hero-section">
         <div className="container">
           <div className="advisor-hero-inner">
@@ -147,239 +217,529 @@ export default function Advisor() {
               UNBIASED AUTOMOTIVE INTELLIGENCE
             </div>
             <h1 className="advisor-main-title">
-              Indian Automotive Advisory & Buying Intelligence
+              AI Auto Advisory & Variant Suggester
             </h1>
             <p className="advisor-hero-desc">
-              Zero PR fluff. Zero brand sponsorships. Priority-calibrated advice across all cars and superbikes in India—accounting for real-world traffic mileage, suspension comfort on Indian potholes, long-term reliability, and maintenance costs.
+              Zero dealership sponsorships. Zero brand PR bias. Our conversational diagnostic engine evaluates Indian road realities—real-world city crawl mileage, low-speed pothole absorption, known mechanical failure points, and exact sweet-spot variant recommendations.
             </p>
-
-            {/* Quick Scenario Starter Chips */}
-            <div className="quick-scenarios-wrapper">
-              <span className="scenarios-heading">Popular Buying Scenarios:</span>
-              <div className="scenarios-chip-grid">
-                {QUICK_SCENARIOS.map((sc, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className="scenario-chip-btn"
-                    onClick={() => loadScenario(sc)}
-                  >
-                    {sc.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Main Diagnostic Workspace ─────────────────────────────────────── */}
-      <div className="container advisor-workspace-grid">
-        {/* Left Form: Vehicle Diagnostic Input */}
-        <div className="advisor-input-card">
-          <div className="card-top-head">
-            <h2 className="card-top-title">Calibrate Your Vehicle Requirements</h2>
-            <p className="card-top-sub">Define your parameters for an unfiltered comparative dossier.</p>
+      <div className="container advisor-workspace-wrap">
+        {step !== 'verdict' ? (
+          /* ── Conversational Questionnaire Mode ──────────────────────────── */
+          <div className="diagnostic-card">
+            {/* Step Progress Tracker */}
+            <div className="diag-progress-bar-wrap">
+              <div className="diag-progress-header">
+                <span className="diag-step-count">Diagnostic Step {step} of 8</span>
+                <span className="diag-step-name">
+                  {step === 1 && "Vehicle Classification"}
+                  {step === 2 && "Budget Calibration"}
+                  {step === 3 && "Showroom vs. Pre-Owned Appetite"}
+                  {step === 4 && "Transmission Preference"}
+                  {step === 5 && "Usage & City Environment"}
+                  {step === 6 && "Core Value Priorities"}
+                  {step === 7 && "Non-Negotiable Features"}
+                  {step === 8 && "Maintenance Mindset & Contenders"}
+                </span>
+              </div>
+              <div className="diag-track">
+                <div className="diag-fill" style={{ width: `${(step / 8) * 100}%` }} />
+              </div>
+            </div>
+
+            <div className="diag-body">
+              {/* ── STEP 1: CATEGORY ── */}
+              {step === 1 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 01</span>
+                    <h2 className="diag-question-title">What type of machine are you looking to acquire?</h2>
+                    <p className="diag-question-sub">Select the primary automotive category you want to evaluate.</p>
+                  </div>
+                  <div className="chip-cards-grid grid-3">
+                    {CATEGORY_OPTIONS.map((cat) => (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        className={`chip-card ${category === cat.value ? 'selected' : ''}`}
+                        onClick={() => {
+                          setCategory(cat.value);
+                          setStep(2);
+                        }}
+                      >
+                        <span className="chip-card-icon">{cat.icon}</span>
+                        <span className="chip-card-title">{cat.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 2: BUDGET ── */}
+              {step === 2 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 02</span>
+                    <h2 className="diag-question-title">What is your realistic budget bracket?</h2>
+                    <p className="diag-question-sub">
+                      From entry commuters and used runabouts to multi-cylinder superbikes and luxury machines.
+                    </p>
+                  </div>
+                  <div className="chip-cards-grid grid-2">
+                    {BUDGET_OPTIONS.map((b) => (
+                      <button
+                        key={b.value}
+                        type="button"
+                        className={`chip-card ${budget === b.value ? 'selected' : ''}`}
+                        onClick={() => {
+                          setBudget(b.value);
+                          setStep(3);
+                        }}
+                      >
+                        <div className="chip-card-header">
+                          <span className="chip-card-title">{b.label}</span>
+                          {budget === b.value && <span className="chip-check">{Icons.check}</span>}
+                        </div>
+                        <span className="chip-card-desc">{b.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 3: NEW VS PRE-OWNED ── */}
+              {step === 3 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 03</span>
+                    <h2 className="diag-question-title">Are you leaning towards Brand New or Pre-Owned?</h2>
+                    <p className="diag-question-sub">
+                      Used vehicles save steep first-year depreciation; brand-new cars provide zero-wear warranty peace of mind.
+                    </p>
+                  </div>
+                  <div className="chip-cards-grid grid-3">
+                    {CONDITION_OPTIONS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        className={`chip-card ${condition === c.value ? 'selected' : ''}`}
+                        onClick={() => {
+                          setCondition(c.value);
+                          setStep(4);
+                        }}
+                      >
+                        <div className="chip-card-header">
+                          <span className="chip-card-title">{c.label}</span>
+                          {condition === c.value && <span className="chip-check">{Icons.check}</span>}
+                        </div>
+                        <span className="chip-card-desc">{c.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 4: TRANSMISSION ── */}
+              {step === 4 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 04</span>
+                    <h2 className="diag-question-title">What is your transmission requirement?</h2>
+                    <p className="diag-question-sub">
+                      Manual, Dual-Clutch DSG, Torque Converter, or relaxed CVT for urban driving?
+                    </p>
+                  </div>
+                  <div className="chip-cards-grid grid-2">
+                    {TRANSMISSION_OPTIONS.map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        className={`chip-card ${transmission === t.value ? 'selected' : ''}`}
+                        onClick={() => {
+                          setTransmission(t.value);
+                          setStep(5);
+                        }}
+                      >
+                        <div className="chip-card-header">
+                          <span className="chip-card-title">{t.label}</span>
+                          {transmission === t.value && <span className="chip-check">{Icons.check}</span>}
+                        </div>
+                        <span className="chip-card-desc">{t.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 5: USAGE & ENVIRONMENT ── */}
+              {step === 5 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 05</span>
+                    <h2 className="diag-question-title">Where and how will this vehicle primarily run?</h2>
+                    <p className="diag-question-sub">
+                      Matches suspension damping, ground clearance, and heat dissipation to your driving reality.
+                    </p>
+                  </div>
+                  <div className="chip-cards-grid grid-2">
+                    {USAGE_OPTIONS.map((u) => (
+                      <button
+                        key={u.value}
+                        type="button"
+                        className={`chip-card ${usage === u.value ? 'selected' : ''}`}
+                        onClick={() => {
+                          setUsage(u.value);
+                          setStep(6);
+                        }}
+                      >
+                        <div className="chip-card-header">
+                          <span className="chip-card-title">{u.label}</span>
+                          {usage === u.value && <span className="chip-check">{Icons.check}</span>}
+                        </div>
+                        <span className="chip-card-desc">{u.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="form-group" style={{ marginTop: 20 }}>
+                    <label className="form-label">City / Region (For RTO tax and pothole calibration)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai, Bangalore, Delhi-NCR, Hyderabad, Pune"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 6: CORE PRIORITIES ── */}
+              {step === 6 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 06</span>
+                    <h2 className="diag-question-title">Select your Top 2 or 3 Core Priorities</h2>
+                    <p className="diag-question-sub">
+                      Pick what matters most to you ({priorities.length}/3 selected). We evaluate trade-offs based on these.
+                    </p>
+                  </div>
+                  <div className="pill-selector-grid">
+                    {PRIORITY_OPTIONS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`pill-btn ${priorities.includes(p) ? 'active' : ''}`}
+                        onClick={() => togglePriority(p)}
+                      >
+                        {priorities.includes(p) && <span className="pill-icon">{Icons.check}</span>}
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="step-actions-bar">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setStep(7)}
+                      disabled={priorities.length === 0}
+                    >
+                      Continue to Features ({priorities.length} Selected) {Icons.arrowRight}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 7: NON-NEGOTIABLE FEATURES ── */}
+              {step === 7 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 07</span>
+                    <h2 className="diag-question-title">Any Non-Negotiable Features?</h2>
+                    <p className="diag-question-sub">
+                      Used by our <strong>Variant Suggester</strong> to pinpoint the exact trim without overpaying for useless extras.
+                    </p>
+                  </div>
+                  <div className="pill-selector-grid">
+                    {FEATURE_OPTIONS.map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        className={`pill-btn ${features.includes(f) ? 'active' : ''}`}
+                        onClick={() => toggleFeature(f)}
+                      >
+                        {features.includes(f) && <span className="pill-icon">{Icons.check}</span>}
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="step-actions-bar">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setStep(8)}
+                    >
+                      Next: Maintenance Mindset {Icons.arrowRight}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 8: MAINTENANCE & CONTENDERS ── */}
+              {step === 8 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 08</span>
+                    <h2 className="diag-question-title">Maintenance Mindset & Contenders</h2>
+                    <p className="diag-question-sub">
+                      Are you looking for zero-drama reliability, or comfortable with scheduled enthusiast upkeep for performance?
+                    </p>
+                  </div>
+
+                  <div className="chip-cards-grid grid-2" style={{ marginBottom: 20 }}>
+                    {MAINTENANCE_OPTIONS.map((m) => (
+                      <button
+                        key={m.value}
+                        type="button"
+                        className={`chip-card ${maintenanceMindset === m.value ? 'selected' : ''}`}
+                        onClick={() => setMaintenanceMindset(m.value)}
+                      >
+                        <div className="chip-card-header">
+                          <span className="chip-card-title">{m.label}</span>
+                          {maintenanceMindset === m.value && <span className="chip-check">{Icons.check}</span>}
+                        </div>
+                        <span className="chip-card-desc">{m.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 16 }}>
+                    <label className="form-label">Specific Contenders You Are Considering (Optional)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="e.g. Slavia 1.5 vs Virtus GT vs Creta or Speed 400 vs 390 Duke"
+                      value={contenders}
+                      onChange={(e) => setContenders(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 24 }}>
+                    <label className="form-label">Any specific questions, doubts, or family constraints? (Optional)</label>
+                    <textarea
+                      rows={2}
+                      className="input"
+                      placeholder="e.g. Need great AC for humid weather; backseat comfort for parents over sharp rumblers."
+                      value={customNotes}
+                      onChange={(e) => setCustomNotes(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="step-actions-bar">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-lg"
+                      style={{ height: 48, padding: '0 28px', fontSize: '1rem' }}
+                      onClick={handleGenerateDossier}
+                      disabled={loading}
+                    >
+                      {loading ? 'Synthesizing Automotive Dossier...' : 'Synthesize AI Automotive Verdict'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Back / Reset Controls */}
+            {step > 1 && (
+              <div className="diag-footer-nav">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setStep(step - 1)}
+                  disabled={loading}
+                >
+                  {Icons.arrowLeft} Back to Previous Question
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={restartDiagnostic}
+                >
+                  Restart Diagnostic
+                </button>
+              </div>
+            )}
           </div>
-
-          <form className="diagnostic-form" onSubmit={handleGenerate}>
-            {/* Budget & Condition */}
-            <div className="form-grid-2">
-              <div className="form-group">
-                <label className="form-label">Budget Tier</label>
-                <select
-                  className="input"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                >
-                  <option value="Under ₹6L">Under ₹6 Lakhs (Beaters / First Cars)</option>
-                  <option value="₹6L - ₹12L">₹6L - ₹12 Lakhs (Hatchbacks & Compacts)</option>
-                  <option value="₹12L - ₹20L">₹12L - ₹20 Lakhs (Family Sedans / Mid-SUVs)</option>
-                  <option value="₹20L - ₹35L">₹20L - ₹35 Lakhs (Executive / 4x4 / Hot Sedans)</option>
-                  <option value="₹35L - ₹75L">₹35L - ₹75 Lakhs (Luxury German / Superbikes)</option>
-                  <option value="₹75L+">₹75 Lakhs+ (Performance / Sports Cars)</option>
-                </select>
+        ) : (
+          /* ── Result Dossier & Interactive Chat Mode ─────────────────────── */
+          <div className="verdict-layout">
+            {/* Top Action Bar */}
+            <div className="verdict-top-bar">
+              <div>
+                <span className="verdict-tag">AUTOMOTIVE DIAGNOSTIC COMPLETE</span>
+                <h2 className="verdict-main-title">{analysis?.summary_title || "Your Vehicle Recommendation Dossier"}</h2>
+                <div className="verdict-meta-strip">
+                  <span className="meta-pill">Category: {category}</span>
+                  <span className="meta-pill">Budget: {budget}</span>
+                  <span className="meta-pill">City: {city}</span>
+                  <span className="meta-pill">Gearbox: {transmission}</span>
+                </div>
               </div>
-
-              <div className="form-group">
-                <label className="form-label">Condition Preference</label>
-                <select
-                  className="input"
-                  value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
-                >
-                  <option value="New or Used">Open to Both (New & Pre-Owned)</option>
-                  <option value="Brand New Showroom Only">Brand New Showroom Only</option>
-                  <option value="Pre-Owned / Used Only">Pre-Owned / Used Only (Max Value)</option>
-                </select>
-              </div>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={restartDiagnostic}
+              >
+                Run New Diagnostic
+              </button>
             </div>
 
-            {/* City & Usage */}
-            <div className="form-grid-2">
-              <div className="form-group">
-                <label className="form-label">City / RTO Region</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Mumbai, Bangalore, Delhi-NCR, Pune"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Primary Usage Pattern</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Daily Bumper-to-Bumper + Weekend Ghats"
-                  value={usage}
-                  onChange={(e) => setUsage(e.target.value)}
-                />
-              </div>
+            {/* Structured Dossier Content */}
+            <div className="dossier-rendered-box">
+              {analysis?.analysis_markdown.split('\n\n').map((block, i) => {
+                if (block.startsWith('### ')) {
+                  return (
+                    <div key={i} className="dossier-section-head">
+                      <h3 className="section-title">{block.replace('### ', '')}</h3>
+                    </div>
+                  );
+                }
+                if (block.startsWith('* ') || block.startsWith('1. ') || block.startsWith('2. ') || block.startsWith('3. ') || block.startsWith('4. ')) {
+                  return (
+                    <div key={i} className="dossier-list-wrap">
+                      {block.split('\n').map((line, j) => (
+                        <div key={j} className="dossier-list-item">
+                          <span className="bullet-sq" />
+                          <span>{line.replace(/^(\* |\d+\. )/, '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+                if (block === '---') {
+                  return <hr key={i} className="dossier-hr" />;
+                }
+                return <p key={i} className="dossier-body-para">{block}</p>;
+              })}
             </div>
 
-            {/* Buyer Priority Selectors */}
-            <div className="form-group">
-              <div className="priority-label-row">
-                <label className="form-label">Select Your Top Priorities (Up to 4)</label>
-                <span className="priority-count-tag">{priorities.length}/4 Selected</span>
+            {/* ── Interactive Follow-up Chatbot Console ────────────────────── */}
+            <div className="advisory-chat-console">
+              <div className="chat-console-header">
+                <div className="chat-avatar-box">
+                  <span className="chat-avatar-icon">🏎️</span>
+                  <div>
+                    <h3 className="chat-bot-title">TorqueTrader AI Automotive Consultant</h3>
+                    <span className="chat-bot-status">● Live & Calibrated to Your {budget} Profile</span>
+                  </div>
+                </div>
+                <span className="guardrail-badge">Auto Guardrails Active</span>
               </div>
-              <div className="priorities-pill-grid">
-                {PRIORITY_OPTIONS.map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    className={`priority-pill ${priorities.includes(opt) ? 'active' : ''}`}
-                    onClick={() => togglePriority(opt)}
+
+              {/* Message Feed */}
+              <div className="chat-feed-box">
+                {chatMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`chat-bubble-row ${msg.role === 'user' ? 'user' : 'assistant'}`}
                   >
-                    {priorities.includes(opt) && <span className="pill-check">{Icons.check}</span>}
-                    {opt}
-                  </button>
+                    <div className="chat-bubble">
+                      <span className="bubble-role">{msg.role === 'user' ? 'You' : 'TorqueTrader Advisor'}</span>
+                      <div className="bubble-text">{msg.content}</div>
+                    </div>
+                  </div>
                 ))}
-              </div>
-            </div>
 
-            {/* Shortlisted Contenders */}
-            <div className="form-group">
-              <label className="form-label">Shortlisted Contenders (Optional)</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g. Virtus GT Plus vs Skoda Slavia vs Verna Turbo"
-                value={contenders}
-                onChange={(e) => setContenders(e.target.value)}
-              />
-            </div>
-
-            {/* Specific Dilemmas / Notes */}
-            <div className="form-group">
-              <label className="form-label">Specific Dilemmas / Test-Drive Questions</label>
-              <textarea
-                rows={2}
-                className="input"
-                placeholder="e.g. Concerned about DSG automatic reliability in heavy city traffic; ride comfort for elderly parents over unscientific speed breakers."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary generate-dossier-btn"
-              disabled={loading}
-            >
-              {loading ? 'Synthesizing Automotive Dossier...' : 'Generate Unbiased Advisory Dossier'}
-            </button>
-          </form>
-        </div>
-
-        {/* Right Column: Output Display or Welcome Pitch */}
-        <div className="advisor-output-col" id="advisory-results-view">
-          {analysis ? (
-            <div className="dossier-results-box">
-              <div className="dossier-results-header">
-                <span className="dossier-tag">UNFILTERED DOSSIER</span>
-                <h3 className="dossier-title">{analysis.summary_title}</h3>
-                <span className="dossier-meta-budget">Budget Tier: {analysis.budget_tier}</span>
-              </div>
-
-              <div className="dossier-rendered-content">
-                {analysis.analysis_markdown.split('\n\n').map((block, i) => {
-                  if (block.startsWith('### ')) {
-                    return <h3 key={i} className="md-heading">{block.replace('### ', '')}</h3>;
-                  }
-                  if (block.startsWith('* ') || block.startsWith('1. ') || block.startsWith('2. ') || block.startsWith('3. ') || block.startsWith('4. ')) {
-                    return (
-                      <div key={i} className="md-list-block">
-                        {block.split('\n').map((line, j) => (
-                          <div key={j} className="md-list-item">
-                            <span className="md-bullet">•</span>
-                            <span>{line.replace(/^(\* |\d+\. )/, '')}</span>
-                          </div>
-                        ))}
+                {chatLoading && (
+                  <div className="chat-bubble-row assistant">
+                    <div className="chat-bubble loading">
+                      <span className="bubble-role">TorqueTrader Advisor</span>
+                      <div className="typing-dots">
+                        <span />
+                        <span />
+                        <span />
                       </div>
-                    );
-                  }
-                  if (block === '---') {
-                    return <hr key={i} className="md-divider" />;
-                  }
-                  return <p key={i} className="md-para">{block}</p>;
-                })}
+                    </div>
+                  </div>
+                )}
+                <div ref={chatBottomRef} />
               </div>
 
-              {/* Pitch to 1-on-1 Paid Consultation */}
-              <div className="dossier-consult-callout">
-                <div className="callout-text-wrap">
-                  <h4 className="callout-title">Need a Human Expert to Double-Check Your Decision?</h4>
-                  <p className="callout-desc">
-                    Book a 1-on-1 strategy call with our founder to audit dealer discount sheets, vet used inspection logs, or negotiate on your behalf.
-                  </p>
-                </div>
-                <div className="callout-actions">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    onClick={() => setSelectedConsultTier({
-                      id: 'strategy_call',
-                      title: '1-on-1 Strategy & Shortlist Video Call',
-                      price: 2999
-                    })}
-                  >
-                    Book 1-on-1 Call (Rs 2,999)
-                  </button>
-                  <Link to="/consulting" className="btn btn-secondary btn-sm">
-                    View All Consulting Tiers
-                  </Link>
+              {/* Suggested Follow-up Chips */}
+              <div className="chat-prompts-strip">
+                <span className="prompts-label">Quick Inquiries:</span>
+                <div className="prompts-grid">
+                  {SUGGESTED_FOLLOWUPS.map((prompt, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className="prompt-chip-btn"
+                      onClick={() => handleSendFollowUp(prompt)}
+                      disabled={chatLoading}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="advisor-welcome-box">
-              <div className="welcome-shield-icon">{Icons.shield}</div>
-              <h3 className="welcome-title">Independent Automotive Authority</h3>
-              <p className="welcome-desc">
-                Select a scenario above or enter your parameters on the left to receive a comprehensive, unvarnished comparative analysis tailored to your driving reality in India.
-              </p>
 
-              <div className="advisory-pillars-card">
-                <div className="pillar-row">
-                  <span className="pillar-num">01</span>
-                  <span className="pillar-text"><strong>Priority-Calibrated:</strong> Balances safety, low-speed ride comfort, and maintenance against raw horsepower.</span>
-                </div>
-                <div className="pillar-row">
-                  <span className="pillar-num">02</span>
-                  <span className="pillar-text"><strong>Real Ownership Costs:</strong> Real-world city mileage, periodic service bills, and known mechanical flaws.</span>
-                </div>
-                <div className="pillar-row">
-                  <span className="pillar-num">03</span>
-                  <span className="pillar-text"><strong>Zero Brand Bias:</strong> We have no dealer affiliations or manufacturer advertising constraints.</span>
-                </div>
+              {/* Chat Input Bar */}
+              <form
+                className="chat-input-bar"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendFollowUp();
+                }}
+              >
+                <input
+                  type="text"
+                  className="chat-text-input"
+                  placeholder="Ask a question (e.g. 'How does maintenance compare with Elevate after 50k km?')"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  disabled={chatLoading}
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary chat-send-btn"
+                  disabled={!chatInput.trim() || chatLoading}
+                >
+                  Send Inquiry {Icons.arrowRight}
+                </button>
+              </form>
+            </div>
+
+            {/* ── Bridge to 1-on-1 Human Consulting Callout ─────────────────── */}
+            <div className="consult-bridge-card">
+              <div className="bridge-info">
+                <div className="bridge-tag">EXPERT DUE DILIGENCE</div>
+                <h3 className="bridge-title">Need a Human Expert to Audit Your Dealer Quotation or Used Inspection?</h3>
+                <p className="bridge-desc">
+                  Book a direct 1-on-1 strategy call with our founder. We review dealer proforma invoices (cutting out useless showroom accessory padding), vet used inspection logs, and evaluate maintenance histories before you transfer any money.
+                </p>
+              </div>
+              <div className="bridge-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setSelectedConsultTier({
+                    id: 'strategy_call',
+                    title: '1-on-1 Strategy & Selection Call',
+                    price: 2999
+                  })}
+                >
+                  Book 1-on-1 Call (Rs 2,999)
+                </button>
+                <Link to="/consulting" className="btn btn-secondary">
+                  View All Consulting Tiers
+                </Link>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {selectedConsultTier && (

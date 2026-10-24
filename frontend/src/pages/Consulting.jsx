@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Icons } from '../components/Icons';
 import ConsultingBookingModal from '../components/ConsultingBookingModal';
 import './Consulting.css';
@@ -121,6 +122,22 @@ export default function Consulting() {
           </div>
         </div>
       </section>
+
+            {/* ── AI Advisor Chatbot Banner ────────────────────────────────────────── */}
+      <div className="container" style={{ marginTop: 24, marginBottom: 8 }}>
+        <div className="consulting-ai-banner">
+          <div className="ai-banner-content">
+            <span className="ai-banner-badge">🤖 INSTANT AI AUTO ADVISOR</span>
+            <h3 className="ai-banner-title">Want Instant Recommendations Before Booking a Human Call?</h3>
+            <p className="ai-banner-desc">
+              Try our free <strong>Interactive AI Auto Advisor & Variant Suggester</strong>. Answer 8 quick-tap questions to calibrate your driving reality, discover the exact sweet-spot trims, and see real-world ownership costs in seconds.
+            </p>
+          </div>
+          <Link to="/advisor" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+            Launch AI Advisor &rarr;
+          </Link>
+        </div>
+      </div>
 
       {/* ── Consulting Packages Grid ──────────────────────────────────────── */}
       <section className="consulting-packages-section">

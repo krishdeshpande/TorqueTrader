@@ -575,6 +575,36 @@ def _call_gemini_api(contents: List[Dict[str, Any]], system_prompt: str) -> Opti
         except Exception as exc:
             logger.error("[ADVISOR] Gemini connection error with model %s: %s", model, exc)
 
+    # Dynamic discovery fallback: query ListModels if predefined models fail
+    try:
+        with httpx.Client(timeout=8.0) as client:
+            list_res = client.get(
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}",
+                headers={"Content-Type": "application/json", "x-goog-api-key": api_key}
+            )
+            if list_res.status_code == 200:
+                models_data = list_res.json().get("models", [])
+                for m in models_data:
+                    methods = m.get("supportedGenerationMethods", [])
+                    if "generateContent" in methods:
+                        m_name = m.get("name", "").replace("models/", "")
+                        if m_name and m_name not in models:
+                            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={api_key}"
+                            payload = {
+                                "contents": contents,
+                                "generationConfig": {"temperature": 0.35, "maxOutputTokens": 2048}
+                            }
+                            res = client.post(url, json=payload, headers={"Content-Type": "application/json", "x-goog-api-key": api_key})
+                            if res.status_code == 200:
+                                candidates = res.json().get("candidates", [])
+                                if candidates:
+                                    text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                                    if text:
+                                        logger.info("[ADVISOR] Gemini dynamic model %s succeeded", m_name)
+                                        return text
+    except Exception as exc:
+        logger.error("[ADVISOR] Dynamic model discovery failed: %s", exc)
+
     return None
 
 

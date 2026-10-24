@@ -98,3 +98,12 @@ def test_advisor_chat_guardrails_deflection():
     data = resp.json()
     assert data["role"] == "assistant"
     assert "strictly calibrated for Indian car and motorcycle buying decisions" in data["content"]
+
+def test_advisor_status_endpoint():
+    """Verify that /advisor/status endpoint responds with diagnostic structure."""
+    response = client.get("/advisor/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert "gemini_configured" in data
+    assert "active_engine" in data
+

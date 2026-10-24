@@ -515,7 +515,7 @@ def _call_gemini_api(contents: List[Dict[str, Any]], system_prompt: str) -> Opti
     if not raw_key:
         return None
 
-    api_key = raw_key.strip()
+    api_key = raw_key.strip().strip('"').strip("'").strip()
     if not api_key:
         return None
 

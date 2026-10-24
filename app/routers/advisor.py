@@ -203,3 +203,59 @@ def list_consultations(
         }
         for b in bookings
     ]
+
+@router.get(
+    "/status",
+    summary="Advisory engine and Gemini LLM integration health probe",
+)
+def check_advisor_status() -> Dict[str, Any]:
+    """Probe Gemini API readiness and report live connectivity status."""
+    raw_key = settings.GEMINI_API_KEY
+    if not raw_key or not raw_key.strip():
+        return {
+            "gemini_configured": False,
+            "status": "fallback_only",
+            "message": "GEMINI_API_KEY environment variable is not configured on Render. The engine is operating in deterministic automotive fallback mode.",
+            "active_engine": "torque_expert_engine",
+        }
+
+    clean_key = raw_key.strip().strip('"').strip("'").strip()
+    masked_key = (clean_key[:6] + "..." + clean_key[-4:]) if len(clean_key) > 10 else "invalid_key_length"
+
+    import httpx
+    probe_results = {}
+    working_model = None
+
+    test_models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    for model in test_models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={clean_key}"
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": "Ping"}]}],
+            "generationConfig": {"maxOutputTokens": 5}
+        }
+        try:
+            with httpx.Client(timeout=10.0) as client:
+                res = client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                if res.status_code == 200:
+                    probe_results[model] = "operational"
+                    if not working_model:
+                        working_model = model
+                else:
+                    try:
+                        err_json = res.json()
+                        probe_results[model] = f"HTTP {res.status_code}: {err_json.get('error', {}).get('message', res.text[:120])}"
+                    except Exception:
+                        probe_results[model] = f"HTTP {res.status_code}: {res.text[:120]}"
+        except Exception as exc:
+            probe_results[model] = f"Connection error: {str(exc)[:120]}"
+
+    is_operational = working_model is not None
+    return {
+        "gemini_configured": True,
+        "key_preview": masked_key,
+        "operational": is_operational,
+        "working_model": working_model,
+        "active_engine": "gemini_ai" if is_operational else "torque_expert_engine",
+        "probe_details": probe_results,
+    }
+

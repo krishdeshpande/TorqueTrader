@@ -539,7 +539,7 @@ def _call_gemini_api(contents: List[Dict[str, Any]], system_prompt: str) -> Opti
 
         try:
             with httpx.Client(timeout=20.0) as client:
-                res = client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                res = client.post(url, json=payload, headers={"Content-Type": "application/json", "x-goog-api-key": api_key})
                 if res.status_code == 200:
                     api_data = res.json()
                     candidates = api_data.get("candidates", [])

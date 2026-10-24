@@ -235,7 +235,7 @@ def check_advisor_status() -> Dict[str, Any]:
         }
         try:
             with httpx.Client(timeout=10.0) as client:
-                res = client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                res = client.post(url, json=payload, headers={"Content-Type": "application/json", "x-goog-api-key": clean_key})
                 if res.status_code == 200:
                     probe_results[model] = "operational"
                     if not working_model:

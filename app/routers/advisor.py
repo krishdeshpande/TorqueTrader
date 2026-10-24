@@ -226,7 +226,29 @@ def check_advisor_status() -> Dict[str, Any]:
     probe_results = {}
     working_model = None
 
-    test_models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    # First check available models via ModelService.ListModels
+    available_generate_models = []
+    try:
+        with httpx.Client(timeout=8.0) as client:
+            list_res = client.get(
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={clean_key}",
+                headers={"Content-Type": "application/json", "x-goog-api-key": clean_key}
+            )
+            if list_res.status_code == 200:
+                models_data = list_res.json().get("models", [])
+                for m in models_data:
+                    methods = m.get("supportedGenerationMethods", [])
+                    if "generateContent" in methods:
+                        m_name = m.get("name", "").replace("models/", "")
+                        if m_name:
+                            available_generate_models.append(m_name)
+    except Exception as exc:
+        logger.warning("Could not fetch ListModels: %s", exc)
+
+    candidate_models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-pro"] + available_generate_models
+    seen = set()
+    test_models = [m for m in candidate_models if not (m in seen or seen.add(m))][:6]
+
     for model in test_models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={clean_key}"
         payload = {
@@ -257,5 +279,6 @@ def check_advisor_status() -> Dict[str, Any]:
         "working_model": working_model,
         "active_engine": "gemini_ai" if is_operational else "torque_expert_engine",
         "probe_details": probe_results,
+        "available_models_discovered": available_generate_models,
     }
 

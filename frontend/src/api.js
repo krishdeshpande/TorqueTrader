@@ -2,7 +2,7 @@ import axios from 'axios';
 import { SEED_LISTINGS } from './data/seedListings';
 
 const isDevelopment = import.meta.env.DEV;
-export const apiBaseUrl = import.meta.env.VITE_API_URL || (isDevelopment ? 'http://localhost:8000' : 'https://torquetrader.onrender.com');
+export const apiBaseUrl = import.meta.env.VITE_API_URL || (isDevelopment ? 'http://localhost:8000' : 'https://torquetrader-1.onrender.com');
 
 const api = axios.create({
   baseURL: apiBaseUrl,

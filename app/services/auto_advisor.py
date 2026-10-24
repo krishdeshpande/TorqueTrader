@@ -520,7 +520,7 @@ def _call_gemini_api(contents: List[Dict[str, Any]], system_prompt: str) -> Opti
         return None
 
     # Supported model fallbacks
-    models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash-exp", "gemini-1.5-flash"]
+    models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.7-flash", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it", "gemini-3.8-flash"]
 
     for model in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
@@ -538,7 +538,7 @@ def _call_gemini_api(contents: List[Dict[str, Any]], system_prompt: str) -> Opti
         }
 
         try:
-            with httpx.Client(timeout=20.0) as client:
+            with httpx.Client(timeout=8.0) as client:
                 res = client.post(url, json=payload, headers={"Content-Type": "application/json", "x-goog-api-key": api_key})
                 if res.status_code == 200:
                     api_data = res.json()

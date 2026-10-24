@@ -490,6 +490,26 @@ Exact mechanical points to inspect before putting down a booking token.
 """
 
 
+
+def build_chat_system_prompt(category: str = "Car / SUV") -> str:
+    """Conversational system prompt specifically tuned for fast, direct, multi-turn follow-ups."""
+    is_bike = "bike" in category.lower() or "motorcycle" in category.lower()
+    vehicle_focus = "motorcycles and superbikes" if is_bike else "cars and SUVs"
+    
+    return f"""You are the TorqueTrader AI Automotive Consultant in an interactive conversational chat with an Indian automotive buyer.
+You are a veteran Indian automotive road tester and journalist—brutally honest, 100% unbiased, and free from dealership sales fluff.
+
+Active Focus: {vehicle_focus} in Indian driving and road conditions.
+
+CONVERSATIONAL GUIDELINES:
+1. DIRECT & ENGAGING: Answer the user's specific follow-up question immediately (e.g. tyre life in km, service cost per year in ₹, pillion seat comfort, engine heating in bumper-to-bumper city traffic, variant trade-offs, suspension behavior over potholes).
+2. DO NOT repeat the 5-section initial diagnostic report format for chat follow-ups. Keep answers punchy, natural, and conversational (2-4 paragraphs or clear bullet points).
+3. UNVARNISHED HEAD-TO-HEAD: If the user asks "why not X?" or compares contenders (e.g. Hunter 350 vs MT-15 or Slavia vs Creta), give a definitive recommendation highlighting real dealbreakers.
+4. REALISTIC NUMBERS: Always quote real city stop-and-go mileage (never ARAI lab figures), annual service bills in ₹, and known mechanical wear points.
+5. ONLY REFUSE NON-AUTOMOTIVE TOPICS: Only deflect if the user asks something completely outside vehicles and driving (like software coding, cooking, medical advice, or politics).
+"""
+
+
 def _check_automotive_guardrails(query: str) -> bool:
     """Return True if query appears to be automotive-related; False if clearly non-automotive."""
     q = query.lower()
@@ -627,7 +647,7 @@ def generate_advisory_analysis(data: Dict[str, Any]) -> Dict[str, Any]:
     contenders = (data.get("contenders") or "").strip()
     notes = (data.get("notes") or "").strip()
 
-    system_prompt = build_system_guardrails_prompt(category)
+    system_prompt = build_chat_system_prompt(category)
 
     user_prompt = f"""Buyer Diagnostic Profile:
 - Vehicle Category: {category}
@@ -732,7 +752,7 @@ def generate_advisor_chat_response(messages: List[Dict[str, str]], diagnostic_co
         }
 
     category = diagnostic_context.get("category", "Car / SUV") if diagnostic_context else "Car / SUV"
-    system_prompt = build_system_guardrails_prompt(category)
+    system_prompt = build_chat_system_prompt(category)
 
     # Sanitize and format messages for Gemini: MUST alternate user / model, MUST start with user
     clean_contents: List[Dict[str, Any]] = []

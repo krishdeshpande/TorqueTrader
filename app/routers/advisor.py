@@ -245,7 +245,7 @@ def check_advisor_status() -> Dict[str, Any]:
     except Exception as exc:
         logger.warning("Could not fetch ListModels: %s", exc)
 
-    candidate_models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.7-flash", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it", "gemini-3.8-flash"] + available_generate_models
+    candidate_models = ["gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash", "gemma-4-26b-a4b-it", "gemini-3.8-flash"] + available_generate_models
     seen = set()
     test_models = [m for m in candidate_models if not (m in seen or seen.add(m))][:6]
 

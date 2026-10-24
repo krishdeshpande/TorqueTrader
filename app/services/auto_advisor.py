@@ -540,7 +540,7 @@ def _call_gemini_api(contents: List[Dict[str, Any]], system_prompt: str) -> Opti
         return None
 
     # Supported model fallbacks
-    models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.7-flash", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it", "gemini-3.8-flash"]
+    models = ["gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash", "gemma-4-26b-a4b-it", "gemini-3.8-flash"]
 
     for model in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"

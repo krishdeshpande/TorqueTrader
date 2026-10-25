@@ -116,24 +116,129 @@ const CONDITION_OPTIONS = [
   { value: "New or Used", label: "Open to Both", desc: "Recommend whichever offers the superior value for money" },
 ];
 
+
+// Helper to parse **bold** and inline text cleanly without raw markdown symbols
+function renderInlineText(text) {
+  if (!text) return null;
+  // Match **bold text**
+  const parts = text.split(/(\*\*[^*]+?\*\*)/g);
+  return parts.map((part, pIdx) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      const boldText = part.slice(2, -2).trim();
+      return <strong key={pIdx} className="content-bold">{boldText}</strong>;
+    }
+    // Remove any accidental stray asterisks or hashes
+    const cleaned = part.replace(/\*/g, '').replace(/^#+\s*/, '');
+    return cleaned;
+  });
+}
+
+// Clean executive-grade automotive markdown renderer: strips all raw #, *, ** and renders styled HTML
+function FormattedAutomotiveText({ content }) {
+  if (!content) return null;
+
+  // Split into double-newline sections
+  const sections = content.split(/\n\s*\n/);
+
+  return (
+    <div className="formatted-auto-content">
+      {sections.map((section, sIdx) => {
+        const trimmed = section.trim();
+        if (!trimmed) return null;
+
+        if (trimmed === '---' || trimmed === '___' || trimmed === '***') {
+          return <hr key={sIdx} className="content-divider" />;
+        }
+
+        // Check if entire section is a header (#, ##, ###, ####)
+        if (trimmed.startsWith('#')) {
+          const match = trimmed.match(/^(#{1,4})\s+(.+)/);
+          if (match) {
+            const level = match[1].length;
+            const title = match[2].replace(/\*\*/g, '').replace(/\*/g, '').trim();
+            if (level <= 2) {
+              return <h2 key={sIdx} className="content-h2">{title}</h2>;
+            } else if (level === 3) {
+              return <h3 key={sIdx} className="content-h3">{title}</h3>;
+            } else {
+              return <h4 key={sIdx} className="content-h4">{title}</h4>;
+            }
+          }
+        }
+
+        const lines = trimmed.split('\n');
+
+        // Check if all lines are list items
+        const isList = lines.every((l) => /^(?:[\*\-\?]\s+|\d+\.\s+)/.test(l.trim()) || l.trim() === '');
+        if (isList && lines.some((l) => l.trim().length > 0)) {
+          return (
+            <ul key={sIdx} className="content-bullet-list">
+              {lines.map((line, lIdx) => {
+                const lineTrim = line.trim();
+                if (!lineTrim) return null;
+                const cleanItem = lineTrim.replace(/^(?:[\*\-\?]\s+|\d+\.\s+)/, '');
+                return (
+                  <li key={lIdx} className="content-bullet-item">
+                    {renderInlineText(cleanItem)}
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        }
+
+        // Mixed paragraphs with inline bullet points or line breaks
+        return (
+          <div key={sIdx} className="content-para-block">
+            {lines.map((line, lIdx) => {
+              const lineTrim = line.trim();
+              if (!lineTrim) return null;
+
+              // Nested subheadings inside a block
+              if (lineTrim.startsWith('#### ') || lineTrim.startsWith('### ')) {
+                const subTitle = lineTrim.replace(/^#{1,4}\s+/, '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
+                return <h4 key={lIdx} className="content-h4-inline">{subTitle}</h4>;
+              }
+
+              // Single bullet line inside a block
+              if (/^(?:[\*\-\?]\s+|\d+\.\s+)/.test(lineTrim)) {
+                const cleanItem = lineTrim.replace(/^(?:[\*\-\?]\s+|\d+\.\s+)/, '');
+                return (
+                  <div key={lIdx} className="content-inline-bullet">
+                    <span className="inline-bullet-dot">?</span>
+                    <span>{renderInlineText(cleanItem)}</span>
+                  </div>
+                );
+              }
+
+              return (
+                <p key={lIdx} className="content-para">
+                  {renderInlineText(lineTrim)}
+                </p>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Advisor() {
   const [step, setStep] = useState(1);
 
   // Category choice: 'Car / SUV' or 'Motorcycle / Superbike'
-  const [category, setCategory] = useState("Car / SUV");
+  const [category, setCategory] = useState("");
 
-  // Dynamic parameters based on category
-  const [budget, setBudget] = useState("₹12L - ₹20L");
-  const [condition, setCondition] = useState("New or Used");
-  const [transmission, setTransmission] = useState("Any Automatic / No Preference");
-  const [usage, setUsage] = useState("Daily Bumper-to-Bumper City Traffic");
+  // Dynamic parameters: start blank without preselected defaults
+  const [budget, setBudget] = useState("");
+  const [condition, setCondition] = useState("");
+  const [transmission, setTransmission] = useState("");
+  const [usage, setUsage] = useState("");
   const [city, setCity] = useState("Mumbai / Bangalore / Delhi-NCR");
-  const [priorities, setPriorities] = useState([
-    "5-Star Crash Safety & Heavy-Duty Build (Global NCAP)",
-    "Low-Speed Ride Comfort & Pothole Absorption"
-  ]);
-  const [features, setFeatures] = useState(["Wireless Android Auto / Apple CarPlay"]);
-  const [maintenanceMindset, setMaintenanceMindset] = useState("Zero Drama");
+  const [priorities, setPriorities] = useState([]);
+  const [features, setFeatures] = useState([]);
+  const [maintenanceMindset, setMaintenanceMindset] = useState("");
   const [contenders, setContenders] = useState("");
   const [customNotes, setCustomNotes] = useState("");
 
@@ -154,21 +259,12 @@ export default function Advisor() {
   // When category changes, reset defaults cleanly
   const handleCategorySelect = (selectedCat) => {
     setCategory(selectedCat);
-    if (selectedCat === "Motorcycle / Superbike") {
-      setBudget("₹3L - ₹6L");
-      setTransmission("6-Speed Manual with Assist & Slipper Clutch");
-      setUsage("Daily City Office Commute & Traffic Filtering");
-      setPriorities(["Pure Cornering Agility & Power-to-Weight Acceleration", "Low Engine Heat Dissipation in Heavy City Traffic"]);
-      setFeatures(["Dual-Channel ABS / IMU Cornering ABS"]);
-      setMaintenanceMindset("Zero Drama");
-    } else {
-      setBudget("₹12L - ₹20L");
-      setTransmission("Any Automatic / No Preference");
-      setUsage("Daily Bumper-to-Bumper City Traffic");
-      setPriorities(["5-Star Crash Safety & Heavy-Duty Build (Global NCAP)", "Low-Speed Ride Comfort & Pothole Absorption"]);
-      setFeatures(["Wireless Android Auto / Apple CarPlay"]);
-      setMaintenanceMindset("Zero Drama");
-    }
+    setBudget("");
+    setTransmission("");
+    setUsage("");
+    setPriorities([]);
+    setFeatures([]);
+    setMaintenanceMindset("");
     setStep(2);
   };
 
@@ -206,16 +302,17 @@ export default function Advisor() {
   const handleGenerateDossier = async () => {
     setLoading(true);
     try {
+      const isMotorcycle = category === "Motorcycle / Superbike";
       const payload = {
-        category,
-        budget,
-        condition,
-        transmission,
-        usage,
-        city,
-        priorities,
-        features,
-        maintenance_mindset: maintenanceMindset,
+        category: category || (isMotorcycle ? "Motorcycle / Superbike" : "Car / SUV"),
+        budget: budget || (isMotorcycle ? "?1.5L - ?3L" : "?12L - ?20L"),
+        condition: condition || "New or Used",
+        transmission: transmission || (isMotorcycle ? "Manual with Slipper Clutch" : "Any Automatic / No Preference"),
+        usage: usage || (isMotorcycle ? "Daily City Commute" : "Daily City & Highway Commute"),
+        city: city || "Mumbai / Bangalore / Delhi-NCR",
+        priorities: priorities.length > 0 ? priorities : (isMotorcycle ? ["Pure Cornering Agility & Power-to-Weight Acceleration"] : ["5-Star Crash Safety & Heavy-Duty Build (Global NCAP)"]),
+        features: features,
+        maintenance_mindset: maintenanceMindset || "Zero Drama",
         contenders: contenders.trim() || undefined,
         notes: customNotes.trim() || undefined,
       };
@@ -544,9 +641,8 @@ export default function Advisor() {
                       type="button"
                       className="btn btn-primary"
                       onClick={() => setStep(7)}
-                      disabled={priorities.length === 0}
                     >
-                      Continue to Equipment ({priorities.length} Selected) {Icons.arrowRight}
+                      {priorities.length > 0 ? `Continue to Equipment (${priorities.length} Selected)` : "Continue to Equipment (Skip)"} {Icons.arrowRight}
                     </button>
                   </div>
                 </div>
@@ -706,33 +802,9 @@ export default function Advisor() {
               </button>
             </div>
 
-            {/* Structured Dossier Content */}
+            {/* Structured Dossier Content (Executive Clean Typography) */}
             <div className="dossier-rendered-box">
-              {analysis?.analysis_markdown.split('\n\n').map((block, i) => {
-                if (block.startsWith('### ')) {
-                  return (
-                    <div key={i} className="dossier-section-head">
-                      <h3 className="section-title">{block.replace('### ', '')}</h3>
-                    </div>
-                  );
-                }
-                if (block.startsWith('* ') || block.startsWith('1. ') || block.startsWith('2. ') || block.startsWith('3. ') || block.startsWith('4. ')) {
-                  return (
-                    <div key={i} className="dossier-list-wrap">
-                      {block.split('\n').map((line, j) => (
-                        <div key={j} className="dossier-list-item">
-                          <span className="bullet-sq" />
-                          <span>{line.replace(/^(\* |\d+\. )/, '')}</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }
-                if (block === '---') {
-                  return <hr key={i} className="dossier-hr" />;
-                }
-                return <p key={i} className="dossier-body-para">{block}</p>;
-              })}
+              <FormattedAutomotiveText content={analysis?.analysis_markdown} />
             </div>
 
             {/* ── Interactive Follow-up Chatbot Console ────────────────────── */}
@@ -757,7 +829,13 @@ export default function Advisor() {
                   >
                     <div className="chat-bubble">
                       <span className="bubble-role">{msg.role === 'user' ? 'You' : 'TorqueTrader Advisor'}</span>
-                      <div className="bubble-text">{msg.content}</div>
+                      <div className="bubble-text">
+                        {msg.role === 'assistant' ? (
+                          <FormattedAutomotiveText content={msg.content} />
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

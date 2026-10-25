@@ -691,3 +691,117 @@
   background: var(--bg-subtle);
   border: 1px solid var(--border);
 }
+
+
+/* Formatted Automotive Text & Executive Clean Typography */
+.formatted-auto-content {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: inherit;
+}
+
+.formatted-auto-content .content-h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 22px 0 10px 0;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 6px;
+}
+
+.formatted-auto-content .content-h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 18px 0 8px 0;
+  color: var(--text-main);
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+  letter-spacing: 0.3px;
+}
+
+.formatted-auto-content .content-h4,
+.formatted-auto-content .content-h4-inline {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 14px 0 6px 0;
+  color: var(--text-main);
+}
+
+.formatted-auto-content .content-para-block {
+  margin-bottom: 14px;
+}
+
+.formatted-auto-content .content-para {
+  font-size: 0.92rem;
+  color: var(--text-main);
+  line-height: 1.65;
+  margin-bottom: 10px;
+}
+
+.formatted-auto-content .content-para:last-child {
+  margin-bottom: 0;
+}
+
+.formatted-auto-content .content-bold {
+  font-weight: 700;
+  color: inherit;
+}
+
+.formatted-auto-content .content-bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 16px 0;
+  padding-left: 20px;
+}
+
+.formatted-auto-content .content-bullet-item {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.55;
+  list-style-type: square;
+}
+
+.formatted-auto-content .content-inline-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.55;
+  margin-bottom: 6px;
+}
+
+.formatted-auto-content .inline-bullet-dot {
+  color: var(--accent);
+  font-size: 1.1rem;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.formatted-auto-content .content-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+/* Chat bubble overrides for formatted content */
+.chat-bubble-row.assistant .formatted-auto-content {
+  color: var(--text-main);
+}
+
+.chat-bubble-row.assistant .formatted-auto-content .content-h2,
+.chat-bubble-row.assistant .formatted-auto-content .content-h3,
+.chat-bubble-row.assistant .formatted-auto-content .content-h4,
+.chat-bubble-row.assistant .formatted-auto-content .content-h4-inline {
+  color: #111827;
+  margin-top: 10px;
+}
+
+.chat-bubble-row.assistant .formatted-auto-content .content-h3 {
+  border-left-color: var(--accent);
+}

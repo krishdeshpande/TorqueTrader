@@ -512,7 +512,26 @@ CONVERSATIONAL GUIDELINES:
 
 def _check_automotive_guardrails(query: str) -> bool:
     """Return True if query appears to be automotive-related; False if clearly non-automotive."""
-    q = query.lower()
+    q = query.lower().strip()
+    
+    # Explicit non-automotive deflection keywords (e.g. programming, politics, medical, recipes)
+    non_auto_keywords = [
+        "python", "javascript", "react", "html", "css", "c++", "java", "sql", "git",
+        "coding", "code", "programming", "software developer", "github",
+        "recipe", "cook", "cooking", "bake", "baking", "cake", "salad",
+        "movie", "actor", "actress", "cinema", "song", "lyrics", "poem", "poetry",
+        "joke", "riddle", "story", "write an essay", "homework",
+        "election", "politics", "politician", "bjp", "congress", "modi", "rahul gandhi", "trump", "biden",
+        "crypto", "bitcoin", "ethereum", "stock market", "mutual fund", "sip investment",
+        "medical diagnosis", "symptom", "medicine", "doctor", "disease"
+    ]
+    if any(nakw in q for nakw in non_auto_keywords):
+        return False
+
+    # Short follow-ups or queries under 45 characters in an active diagnostic session are automotive by default
+    if len(q) < 45:
+        return True
+
     auto_keywords = [
         "car", "bike", "suv", "sedan", "hatchback", "superbike", "engine", "gearbox", "mileage",
         "transmission", "clutch", "brake", "pothole", "rto", "vahan", "creta", "slavia", "virtus",
@@ -521,11 +540,14 @@ def _check_automotive_guardrails(query: str) -> bool:
         "yamaha", "budget", "service", "maintenance", "diesel", "petrol", "hybrid", "ev", "used",
         "new", "odometer", "variant", "trim", "adas", "sunroof", "ventilated", "handling", "ride",
         "speed", "bhp", "torque", "dsg", "cvt", "dct", "automatic", "manual", "drive", "ride", "tyre",
-        "pulsar", "splendor", "raider", "himalayan", "interceptor", "ninja", "panigale", "s1000rr",
-        "z900", "hayabusa", "scorpio", "elevate", "innova", "xuv700", "kodiak", "m340i", "porsche"
+        "tire", "pulsar", "splendor", "raider", "himalayan", "interceptor", "ninja", "panigale", "s1000rr",
+        "z900", "hayabusa", "scorpio", "elevate", "innova", "xuv700", "kodiak", "m340i", "porsche",
+        "fast", "fastest", "faster", "quick", "quicker", "cheap", "cheapest", "expensive", "best", "better", "top",
+        "pick", "recommend", "suggest", "compare", "vs", "versus", "option", "choice", "why", "which",
+        "what", "pillion", "seat", "comfort", "heat", "hot", "tour", "touring", "road", "spares", "parts",
+        "cost", "price", "sprocket", "chain", "suspension", "wheel", "rim", "fuel", "tank", "kmpl", "km/l",
+        "overtake", "cruising", "commute", "daily", "city", "highway", "traffic"
     ]
-    if len(q.strip()) < 15:
-        return True
     return any(kw in q for kw in auto_keywords)
 
 

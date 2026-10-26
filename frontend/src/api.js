@@ -447,3 +447,43 @@ export const uploadBikePhoto = (file) => {
   fd.append('file', file);
   return api.post('/media/public/bike-photo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
 };
+
+// ── Group Car & Insurance Buying API ──────────────────────────────────────────
+export const getGroupBuyingCatalog = (category) =>
+  api.get('/group-buying/catalog', { params: { category } });
+
+export const getBuyerGroups = (params) =>
+  api.get('/group-buying/groups', { params });
+
+export const getGroupDetail = (groupId) =>
+  api.get(`/group-buying/groups/${groupId}`);
+
+export const createBuyerGroup = (data) =>
+  api.post('/group-buying/groups', data);
+
+export const joinBuyerGroup = (groupId, data) =>
+  api.post(`/group-buying/groups/${groupId}/join`, data);
+
+export const leaveBuyerGroup = (groupId, email) =>
+  api.post(`/group-buying/groups/${groupId}/leave`, null, { params: { email } });
+
+export const submitBuyerOfferDecision = (data) =>
+  api.post('/group-buying/quotes/decision', data);
+
+export const registerDealer = (data) =>
+  api.post('/group-buying/dealers/register', data);
+
+export const getDealerEligibleGroups = (dealerId) =>
+  api.get('/group-buying/dealer/eligible-groups', { params: { dealer_id: dealerId } });
+
+export const submitDealerQuote = (dealerId, data) =>
+  api.post('/group-buying/dealer/submit-quote', data, { params: { dealer_id: dealerId } });
+
+export const getAdminGroupMetrics = () =>
+  api.get('/group-buying/admin/metrics');
+
+export const adminRequestQuotes = (groupId) =>
+  api.post(`/group-buying/admin/groups/${groupId}/request-quotes`);
+
+export const adminReleaseOffers = (groupId) =>
+  api.post(`/group-buying/admin/groups/${groupId}/release-offers`);

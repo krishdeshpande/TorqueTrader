@@ -127,6 +127,10 @@ export default function Navbar() {
                 Browse Superbikes
               </NavLink>
 
+              <NavLink to="/group-buying" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                Group Buying <span className="nav-pulse-badge">Pool & Save</span>
+              </NavLink>
+
               <NavLink to="/blog" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 Blog
               </NavLink>
@@ -233,6 +237,9 @@ export default function Navbar() {
 
               <NavLink to="/listings" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Browse Superbikes
+              </NavLink>
+              <NavLink to="/group-buying" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
+                Group Buying (Pool & Save)
               </NavLink>
               <NavLink to="/blog" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>
                 Blog

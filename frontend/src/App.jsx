@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
 import Advisor from './pages/Advisor';
 import Consulting from './pages/Consulting';
+import GroupBuying from './pages/GroupBuying';
 import Profile from './pages/Profile';
 import ProfileOnboarding from './components/ProfileOnboarding';
 
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/advisor" element={<Advisor />} />
         <Route path="/consulting" element={<Consulting />} />
+        <Route path="/group-buying" element={<GroupBuying />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/new" element={<CreateListing />} />
         <Route path="/profile" element={<Profile />} />

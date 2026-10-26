@@ -349,3 +349,17 @@
   .hide-mobile { display: none !important; }
   .mobile-toggle-btn { display: flex; }
 }
+
+.nav-pulse-badge {
+  display: inline-block;
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}

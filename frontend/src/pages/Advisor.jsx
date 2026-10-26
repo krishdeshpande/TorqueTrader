@@ -899,6 +899,26 @@ export default function Advisor() {
               </form>
             </div>
 
+            {/* ── Group Buying Collective Discount Banner ─────────────────── */}
+            <div className="advisor-group-buying-banner">
+              <div className="agb-inner">
+                <div className="agb-badge">💥 COLLECTIVE BUYER BARGAINING</div>
+                <h3 className="agb-title">Don't Pay Showroom Retail for Your Recommended Machine</h3>
+                <p className="agb-desc">
+                  Pool your purchase order with verified buyers in <strong>{city}</strong> on TorqueTrader Group Buying.
+                  Local authorized dealerships & motor insurers submit sealed competitive on-road bids—saving members up to ₹3,15,000.
+                </p>
+                <div className="agb-actions">
+                  <Link
+                    to={`/group-buying?city=${encodeURIComponent(city)}`}
+                    className="btn btn-primary"
+                  >
+                    Explore or Start a {city} Buyer Group →
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* ── Bridge to 1-on-1 Human Consulting Callout ─────────────────── */}
             <div className="consult-bridge-card">
               <div className="bridge-info">

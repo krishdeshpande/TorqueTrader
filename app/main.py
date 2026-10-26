@@ -22,6 +22,7 @@ from app.routers import (
     advisor,
     feedback,
     blog,
+    group_buying,
 )
 
 from app.services.blog_tag_seed import ensure_default_blog_tags
@@ -171,6 +172,7 @@ app.include_router(listings.router)
 app.include_router(advisor.router)
 app.include_router(feedback.router)
 app.include_router(blog.router)
+app.include_router(group_buying.router)
 
 
 # ============================================================

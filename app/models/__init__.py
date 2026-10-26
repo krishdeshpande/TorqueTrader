@@ -12,3 +12,14 @@ from app.models.feedback import Feedback  # noqa: F401
 
 # Blog models
 from app.models.blog import BlogPost, BlogTag, BlogReport, blog_post_tags  # noqa: F401
+# Group Buying models
+from app.models.group_buying import (  # noqa: F401
+    VehicleCatalog,
+    DealerOrganization,
+    BuyerGroup,
+    GroupMembership,
+    QuotationRequest,
+    DealerQuotation,
+    QuotationRevision,
+    BuyerOfferResponse,
+)

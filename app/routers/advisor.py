@@ -14,6 +14,7 @@ import resend
 
 from app.database import get_db
 from app.config import settings
+from app.core.security import require_admin
 from app.models.consultation import ConsultationBooking
 from app.services.auto_advisor import generate_advisory_analysis, generate_advisor_chat_response
 
@@ -180,7 +181,8 @@ def book_consultation(
     summary="List all consultation bookings for Dashboard",
 )
 def list_consultations(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _admin = Depends(require_admin),
 ) -> List[Dict[str, Any]]:
     """Retrieve all consultation leads ordered by newest first."""
     bookings = db.query(ConsultationBooking).order_by(ConsultationBooking.created_at.desc()).all()

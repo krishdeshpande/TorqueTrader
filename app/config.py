@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     # ── Admin / Founder Alert Notifications ──────────────────────────────────
     FOUNDER_EMAIL: str = "krishdeshpande16@gmail.com"
+    ADMIN_EMAILS: str = "krishdeshpande16@gmail.com,krishdeshpande15@gmail.com,admin@torquetrader.in"
 
     # ── OTP (via Resend email) ────────────────────────────────────────────────
     OTP_TTL_SECONDS: int = 300       # 5 minutes

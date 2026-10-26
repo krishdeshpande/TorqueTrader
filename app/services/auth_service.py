@@ -168,6 +168,13 @@ def verify_otp_and_login(request: VerifyOTPRequest, db: Session, redis=None) -> 
             detail="Account is suspended. Please contact support.",
         )
 
+    # Auto-elevate configured administrative accounts
+    admin_list = [e.strip().lower() for e in getattr(settings, "ADMIN_EMAILS", "").split(",") if e.strip()]
+    if identifier in admin_list and user.role != UserRole.admin:
+        user.role = UserRole.admin
+        db.commit()
+        db.refresh(user)
+
     user_role_str = user.role.value if hasattr(user.role, "value") else str(user.role)
 
     # Issue JWT token (sub is user.email for OAuth2 compatibility)

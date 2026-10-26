@@ -17,13 +17,15 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    Promise.all([
+    const fetchPromises = [
       getListings().catch(() => ({ data: [] })),
-      getConsultations().catch(() => [])
-    ])
+      user?.role === 'admin' ? getConsultations().catch(() => []) : Promise.resolve([])
+    ];
+
+    Promise.all(fetchPromises)
       .then(([listingsRes, consultsRes]) => {
         setListings(listingsRes.data || []);
-        setConsultations(consultsRes || []);
+        setConsultations(user?.role === 'admin' ? (consultsRes || []) : []);
       })
       .finally(() => setLoading(false));
   }, [user]);
@@ -93,11 +95,13 @@ export default function Dashboard() {
       <div className="container dash-content-layout">
         {/* Stats Row */}
         <div className="dash-stats-row">
-          <div className="dash-stat-card">
-            <span className="stat-label">Consultation Requests</span>
-            <div className="stat-val" style={{ color: 'var(--accent)' }}>{counts.consultations}</div>
-            <span className="stat-sub">Paid 1-on-1 Advisory Leads</span>
-          </div>
+          {user?.role === 'admin' && (
+            <div className="dash-stat-card">
+              <span className="stat-label">Consultation Requests</span>
+              <div className="stat-val" style={{ color: 'var(--accent)' }}>{counts.consultations}</div>
+              <span className="stat-sub">Admin Only Lead Dossiers</span>
+            </div>
+          )}
 
           <div className="dash-stat-card">
             <span className="stat-label">Active Listings</span>
@@ -127,13 +131,15 @@ export default function Dashboard() {
           >
             My Listings ({counts.mine})
           </button>
-          <button
-            type="button"
-            className={`dash-tab-btn ${activeTab === 'consultations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('consultations')}
-          >
-            Consultation Bookings ({counts.consultations})
-          </button>
+          {user?.role === 'admin' && (
+            <button
+              type="button"
+              className={`dash-tab-btn ${activeTab === 'consultations' ? 'active' : ''}`}
+              onClick={() => setActiveTab('consultations')}
+            >
+              Consultation Bookings ({counts.consultations})
+            </button>
+          )}
           <button
             type="button"
             className={`dash-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
@@ -151,7 +157,7 @@ export default function Dashboard() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'consultations' ? (
+        {activeTab === 'consultations' && user?.role === 'admin' ? (
           consultations.length === 0 ? (
             <div className="dash-empty-box">
               <h3>No Consultation Bookings Yet</h3>

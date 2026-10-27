@@ -728,6 +728,7 @@ Please provide your complete, unfiltered, highly specific automotive dossier for
     p2 = matched_tier["primary_recommendations"][1] if len(matched_tier["primary_recommendations"]) > 1 else p1
     priority_str = ", ".join(priorities) if isinstance(priorities, list) else priorities
     feature_str = ", ".join(features) if isinstance(features, list) and features else "Standard Package"
+    checklist_str = "\n".join([f"{i+1}. {item}" for i, item in enumerate(matched_tier.get('checklist', []))])
 
     analysis_md = f"""### 1. The Buyer DNA & Unvarnished Verdict
 **Calibrated Buyer Persona:** Value-Conscious {category} enthusiast prioritizing **{priority_str}** with a **{transmission}** preference in **{city}**.
@@ -764,10 +765,7 @@ Please provide your complete, unfiltered, highly specific automotive dossier for
 
 ### 5. Pre-Purchase & Test-Drive Inspection Checklist
 Before putting down any booking token or transferring money:
-1. {matched_tier['checklist'][0]}
-2. {matched_tier['checklist'][1]}
-3. {matched_tier['checklist'][2]}
-4. {matched_tier['checklist'][3]}
+{checklist_str}
 """
 
     return {

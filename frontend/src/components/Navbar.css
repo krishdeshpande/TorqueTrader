@@ -115,9 +115,6 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  font: inherit;
-  font-family: inherit;
-  color: inherit;
 }
 
 .dropdown-arrow {

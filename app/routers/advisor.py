@@ -25,6 +25,7 @@ router = APIRouter(prefix="/advisor", tags=["Automotive Advisory & Consulting"])
 
 class DiagnosticAnalysisRequest(BaseModel):
     category: Optional[str] = Field(default="Car / SUV")
+    body_style: Optional[str] = Field(default=None)
     budget: str = Field(default="₹12L - ₹20L")
     condition: str = Field(default="New or Used")
     city: str = Field(default="Mumbai / Delhi-NCR / Bangalore")

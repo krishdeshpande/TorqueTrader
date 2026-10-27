@@ -110,6 +110,23 @@ const BIKE_MAINTENANCE = [
   { value: "Enthusiast Care", label: "\"Enthusiast Care\" (Performance First)", desc: "Happy with premium tyre wear (Pirelli/Metzeler) and European/Desmo valve service costs." }
 ];
 
+// ── BODY STYLE / SUB-CATEGORY CONFIGURATION ─────────────────────────────────
+const BIKE_STYLES = [
+  { value: "Adventure / Dual-Sport (ADV)", label: "Adventure / Tourer (ADV)", desc: "Long-travel suspension, upright ergonomics, luggage racks (Himalayan 450, 390 Adventure, Africa Twin, BMW GS)" },
+  { value: "Naked / Streetfighter", label: "Naked / Streetfighter", desc: "Upright-aggressive posture, sharp city filtering, explosive low-mid torque (MT-15, Duke, Street Triple, Z900)" },
+  { value: "Supersport / Track / Faired", label: "Supersport / Track / Faired", desc: "Aerodynamic fairing, clip-ons, aggressive knee-down corner carving (RC 390, RS 457, ZX-10R, S1000RR)" },
+  { value: "Cruiser / Modern Classic", label: "Cruiser / Modern Classic", desc: "Low saddle height, relaxed foot-forward posture, effortless torque spread (Hunter 350, Classic 350, Super Meteor)" },
+  { value: "Open to Any / Best Value for Budget", label: "Open to Any / Best Match", desc: "Recommend the highest-performing, best-engineered machine for my budget regardless of body style." },
+];
+
+const CAR_STYLES = [
+  { value: "Compact / Mid-Size SUV / 4x4", label: "SUV / Compact SUV / 4x4", desc: "High ground clearance (>190mm), commanding road view, broken road compliance (Creta, Nexon, Thar, XUV700)" },
+  { value: "Sedan / Notchback", label: "Sedan / Dynamic Notchback", desc: "Low center of gravity, high-speed cornering stability, planted highway cruiser (Slavia, Virtus GT, City, BMW 330i)" },
+  { value: "Hatchback / Hot Hatch", label: "Hatchback / Hot Hatch", desc: "Effortless city parking, nimble handling, low running cost (i20 N-Line, Polo, Altroz)" },
+  { value: "MPV / Multi-Seater Family Cruiser", label: "MPV / 7-Seater Family Cruiser", desc: "Generous 7-seater space, plush flat ride, cross-country family touring (Innova Hycross, Carens, Ertiga)" },
+  { value: "Open to Any Body Style", label: "Open to Any Body Style", desc: "Recommend whatever delivers the greatest comfort, safety, and value for money." },
+];
+
 const CONDITION_OPTIONS = [
   { value: "Brand New Showroom Only", label: "Brand New Only", desc: "Full factory warranty, zero previous owner wear" },
   { value: "Pre-Owned / Used Only", label: "Pre-Owned (Max Value)", desc: "Depreciation saved, bigger engine or higher segment machine" },
@@ -229,6 +246,8 @@ export default function Advisor() {
 
   // Category choice: 'Car / SUV' or 'Motorcycle / Superbike'
   const [category, setCategory] = useState("");
+  const [bodyStyle, setBodyStyle] = useState("");
+  const [diagError, setDiagError] = useState(null);
 
   // Dynamic parameters: start blank without preselected defaults
   const [budget, setBudget] = useState("");
@@ -259,17 +278,20 @@ export default function Advisor() {
   // When category changes, reset defaults cleanly
   const handleCategorySelect = (selectedCat) => {
     setCategory(selectedCat);
+    setBodyStyle("");
     setBudget("");
     setTransmission("");
     setUsage("");
     setPriorities([]);
     setFeatures([]);
     setMaintenanceMindset("");
+    setDiagError(null);
     setStep(2);
   };
 
   const isBike = category === "Motorcycle / Superbike";
 
+  const bodyStyleOptions = isBike ? BIKE_STYLES : CAR_STYLES;
   const budgetOptions = isBike ? BIKE_BUDGETS : CAR_BUDGETS;
   const transmissionOptions = isBike ? BIKE_TRANSMISSIONS : CAR_TRANSMISSIONS;
   const usageOptions = isBike ? BIKE_USAGES : CAR_USAGES;
@@ -301,11 +323,13 @@ export default function Advisor() {
 
   const handleGenerateDossier = async () => {
     setLoading(true);
+    setDiagError(null);
     try {
       const isMotorcycle = category === "Motorcycle / Superbike";
       const payload = {
         category: category || (isMotorcycle ? "Motorcycle / Superbike" : "Car / SUV"),
-        budget: budget || (isMotorcycle ? "?1.5L - ?3L" : "?12L - ?20L"),
+        body_style: bodyStyle || (isMotorcycle ? "Open to Any / Best Value for Budget" : "Open to Any Body Style"),
+        budget: budget || (isMotorcycle ? "₹1.5L - ₹3L" : "₹12L - ₹20L"),
         condition: condition || "New or Used",
         transmission: transmission || (isMotorcycle ? "Manual with Slipper Clutch" : "Any Automatic / No Preference"),
         usage: usage || (isMotorcycle ? "Daily City Commute" : "Daily City & Highway Commute"),
@@ -329,7 +353,8 @@ export default function Advisor() {
       toast.success('Automotive Intelligence dossier generated.');
       window.scrollTo({ top: 120, behavior: 'smooth' });
     } catch (err) {
-      toast.error('Could not generate advisory. Please try again.');
+      setDiagError('The AI engine timed out or was connecting. Click below to retry live generation.');
+      toast.error('Live AI generation encountered an issue. Please retry.');
     } finally {
       setLoading(false);
     }
@@ -415,20 +440,21 @@ export default function Advisor() {
             {/* Step Progress Tracker */}
             <div className="diag-progress-bar-wrap">
               <div className="diag-progress-header">
-                <span className="diag-step-count">Diagnostic Step {step} of 8</span>
+                <span className="diag-step-count">Diagnostic Step {step} of 9</span>
                 <span className="diag-step-name">
                   {step === 1 && "Vehicle Classification (Car vs. Motorcycle)"}
-                  {step === 2 && (isBike ? "Motorcycle Budget Bracket" : "Car / SUV Budget Bracket")}
-                  {step === 3 && "Showroom vs. Pre-Owned Appetite"}
-                  {step === 4 && (isBike ? "Clutch & Gearbox Configuration" : "Car Transmission Preference")}
-                  {step === 5 && (isBike ? "Riding Usage & Commute Reality" : "Driving Usage & City Environment")}
-                  {step === 6 && "Core Value Priorities"}
-                  {step === 7 && (isBike ? "Non-Negotiable Motorcycle Equipment" : "Non-Negotiable Car Features")}
-                  {step === 8 && "Maintenance Mindset & Contenders"}
+                  {step === 2 && (isBike ? "Motorcycle Body Style & Archetype" : "Car Body Style")}
+                  {step === 3 && (isBike ? "Motorcycle Budget Bracket" : "Car / SUV Budget Bracket")}
+                  {step === 4 && "Showroom vs. Pre-Owned Appetite"}
+                  {step === 5 && (isBike ? "Clutch & Gearbox Configuration" : "Car Transmission Preference")}
+                  {step === 6 && (isBike ? "Riding Usage & Commute Reality" : "Driving Usage & City Environment")}
+                  {step === 7 && "Core Value Priorities"}
+                  {step === 8 && (isBike ? "Non-Negotiable Equipment & Safety Tech" : "Non-Negotiable Equipment")}
+                  {step === 9 && "Maintenance Mindset & Shortlisted Contenders"}
                 </span>
               </div>
               <div className="diag-track">
-                <div className="diag-fill" style={{ width: `${(step / 8) * 100}%` }} />
+                <div className="diag-fill" style={{ width: `${(step / 9) * 100}%` }} />
               </div>
             </div>
 
@@ -467,15 +493,60 @@ export default function Advisor() {
                 </div>
               )}
 
-              {/* ── STEP 2: BUDGET (CATEGORY TAILORED) ── */}
+              {/* ── STEP 2: BODY STYLE / ARCHETYPE ── */}
               {step === 2 && (
                 <div className="diag-step-container">
                   <div className="diag-q-meta">
                     <span className="q-badge">STEP 02</span>
+                    <h2 className="diag-question-title">
+                      {isBike ? "Which motorcycle body style matches your riding mission?" : "Which car body style suits your everyday use?"}
+                    </h2>
+                    <p className="diag-question-sub">
+                      {isBike 
+                        ? "Filters your evaluation strictly by chassis archetype: from long-travel ADVs to naked streetfighters, cruisers, and track supersports." 
+                        : "Filters by space, seating, and road clearance: from urban compact SUVs to low-slung highway sedans and 7-seater MPVs."}
+                    </p>
+                  </div>
+                  <div className="chip-cards-grid grid-2">
+                    {bodyStyleOptions.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        className={`chip-card ${bodyStyle === s.value ? 'selected' : ''}`}
+                        onClick={() => {
+                          setBodyStyle(s.value);
+                          setStep(3);
+                        }}
+                      >
+                        <div className="chip-card-header">
+                          <span className="chip-card-title">{s.label}</span>
+                          {bodyStyle === s.value && <span className="chip-check">{Icons.check}</span>}
+                        </div>
+                        <span className="chip-card-desc">{s.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="step-actions-bar" style={{ marginTop: 20 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(1)}
+                    >
+                      ← Back to Classification
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 3: BUDGET (CATEGORY TAILORED) ── */}
+              {step === 3 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 03</span>
                     <h2 className="diag-question-title">What is your realistic budget bracket?</h2>
                     <p className="diag-question-sub">
                       {isBike 
-                        ? "Calibrated for motorcycles: from entry commuters and 300cc bikes to liter-class superbikes." 
+                        ? "Calibrated for motorcycles: from entry commuters and 300cc bikes to middleweights and liter-class superbikes." 
                         : "Calibrated for cars: from first-time beaters to mid-size SUVs and luxury performance sedans."}
                     </p>
                   </div>
@@ -487,7 +558,7 @@ export default function Advisor() {
                         className={`chip-card ${budget === b.value ? 'selected' : ''}`}
                         onClick={() => {
                           setBudget(b.value);
-                          setStep(3);
+                          setStep(4);
                         }}
                       >
                         <div className="chip-card-header">
@@ -498,14 +569,23 @@ export default function Advisor() {
                       </button>
                     ))}
                   </div>
+                  <div className="step-actions-bar" style={{ marginTop: 20 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(2)}
+                    >
+                      ← Back to Body Style
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* ── STEP 3: NEW VS PRE-OWNED ── */}
-              {step === 3 && (
+              {/* ── STEP 4: NEW VS PRE-OWNED ── */}
+              {step === 4 && (
                 <div className="diag-step-container">
                   <div className="diag-q-meta">
-                    <span className="q-badge">STEP 03</span>
+                    <span className="q-badge">STEP 04</span>
                     <h2 className="diag-question-title">Are you leaning towards Brand New or Pre-Owned?</h2>
                     <p className="diag-question-sub">
                       Used vehicles save steep initial depreciation; brand-new models provide zero previous owner wear and full factory warranty.
@@ -519,7 +599,7 @@ export default function Advisor() {
                         className={`chip-card ${condition === c.value ? 'selected' : ''}`}
                         onClick={() => {
                           setCondition(c.value);
-                          setStep(4);
+                          setStep(5);
                         }}
                       >
                         <div className="chip-card-header">
@@ -530,21 +610,30 @@ export default function Advisor() {
                       </button>
                     ))}
                   </div>
+                  <div className="step-actions-bar" style={{ marginTop: 20 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(3)}
+                    >
+                      ← Back to Budget
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* ── STEP 4: TRANSMISSION (SEPARATE FOR CAR VS BIKE) ── */}
-              {step === 4 && (
+              {/* ── STEP 5: TRANSMISSION / CLUTCH ── */}
+              {step === 5 && (
                 <div className="diag-step-container">
                   <div className="diag-q-meta">
-                    <span className="q-badge">STEP 04</span>
+                    <span className="q-badge">STEP 05</span>
                     <h2 className="diag-question-title">
-                      {isBike ? "What is your clutch & gearbox preference?" : "What is your transmission requirement?"}
+                      {isBike ? "Preferred Clutch & Gearbox Configuration" : "Which transmission type do you prefer?"}
                     </h2>
                     <p className="diag-question-sub">
-                      {isBike
-                        ? "Slipper clutch for smooth downshifts, bi-directional quickshifter for clutchless shifts, or standard 5-speed?"
-                        : "Manual, Dual-Clutch DSG, Torque Converter AT, or relaxed CVT for city crawl?"}
+                      {isBike 
+                        ? "Select how you prefer shifting gears: from quickshifters for clutchless up/down shifts to slipper clutches for rear-wheel stability." 
+                        : "Different automatics behave drastically differently in Indian stop-and-go crawls. Choose your preferred driving feel."}
                     </p>
                   </div>
                   <div className="chip-cards-grid grid-2">
@@ -555,7 +644,7 @@ export default function Advisor() {
                         className={`chip-card ${transmission === t.value ? 'selected' : ''}`}
                         onClick={() => {
                           setTransmission(t.value);
-                          setStep(5);
+                          setStep(6);
                         }}
                       >
                         <div className="chip-card-header">
@@ -566,19 +655,28 @@ export default function Advisor() {
                       </button>
                     ))}
                   </div>
+                  <div className="step-actions-bar" style={{ marginTop: 20 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(4)}
+                    >
+                      ← Back to Condition
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* ── STEP 5: USAGE & ENVIRONMENT ── */}
-              {step === 5 && (
+              {/* ── STEP 6: USAGE REALITY ── */}
+              {step === 6 && (
                 <div className="diag-step-container">
                   <div className="diag-q-meta">
-                    <span className="q-badge">STEP 05</span>
-                    <h2 className="diag-question-title">
-                      {isBike ? "How and where will you primarily ride?" : "Where and how will this car primarily run?"}
-                    </h2>
+                    <span className="q-badge">STEP 06</span>
+                    <h2 className="diag-question-title">What is your actual primary driving environment?</h2>
                     <p className="diag-question-sub">
-                      Calibrates low-speed suspension bump absorption, engine cooling in traffic, and ground clearance.
+                      {isBike 
+                        ? "Thermal management and clutch effort depend heavily on whether you filter through city crawl or cruise on highways." 
+                        : "Suspension setup, cooling efficiency, and fuel economy vary wildly between heavy city gridlock and open expressways."}
                     </p>
                   </div>
                   <div className="chip-cards-grid grid-2">
@@ -589,7 +687,7 @@ export default function Advisor() {
                         className={`chip-card ${usage === u.value ? 'selected' : ''}`}
                         onClick={() => {
                           setUsage(u.value);
-                          setStep(6);
+                          setStep(7);
                         }}
                       >
                         <div className="chip-card-header">
@@ -600,117 +698,150 @@ export default function Advisor() {
                       </button>
                     ))}
                   </div>
-                  <div className="form-group" style={{ marginTop: 20 }}>
-                    <label className="form-label">City / Region (For RTO road tax and pothole calibration)</label>
+                  <div className="step-actions-bar" style={{ marginTop: 20 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(5)}
+                    >
+                      ← Back to Transmission
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 7: CORE VALUE PRIORITIES ── */}
+              {step === 7 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 07</span>
+                    <h2 className="diag-question-title">What are your top non-negotiable priorities? (Pick up to 3)</h2>
+                    <p className="diag-question-sub">
+                      Every machine is an engineering compromise. Pick the attributes you refuse to sacrifice.
+                    </p>
+                  </div>
+                  <div className="chip-pills-wrap">
+                    {priorityOptions.map((p) => {
+                      const isSelected = priorities.includes(p);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          className={`chip-pill ${isSelected ? 'selected' : ''}`}
+                          onClick={() => togglePriority(p)}
+                        >
+                          {isSelected && <span className="pill-check">✓ </span>}
+                          {p}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="step-actions-bar" style={{ marginTop: 24 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(6)}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={priorities.length === 0}
+                      onClick={() => setStep(8)}
+                    >
+                      Next: Features ({priorities.length} selected) →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 8: FEATURES & TECH ── */}
+              {step === 8 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 08</span>
+                    <h2 className="diag-question-title">
+                      {isBike ? "Preferred Motorcycle Safety Tech & Equipment (Optional)" : "Must-Have Vehicle Features (Optional)"}
+                    </h2>
+                    <p className="diag-question-sub">
+                      Select specific convenience, safety, or mechanical gear you want in your vehicle.
+                    </p>
+                  </div>
+                  <div className="chip-pills-wrap">
+                    {featureOptions.map((f) => {
+                      const isSelected = features.includes(f);
+                      return (
+                        <button
+                          key={f}
+                          type="button"
+                          className={`chip-pill ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleFeature(f)}
+                        >
+                          {isSelected && <span className="pill-check">✓ </span>}
+                          {f}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="step-actions-bar" style={{ marginTop: 24 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(7)}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setStep(9)}
+                    >
+                      Next: Final Details →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 9: MAINTENANCE & CONTENDERS ── */}
+              {step === 9 && (
+                <div className="diag-step-container">
+                  <div className="diag-q-meta">
+                    <span className="q-badge">STEP 09</span>
+                    <h2 className="diag-question-title">Maintenance Mindset & Shortlisted Contenders</h2>
+                    <p className="diag-question-sub">
+                      Tell us your tolerance for workshop visits, your city, and any machines you have already test driven or shortlisted.
+                    </p>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 20 }}>
+                    <label className="form-label">City / Registration State</label>
                     <input
                       type="text"
                       className="input"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. Mumbai, Bangalore, Delhi-NCR, Hyderabad, Pune, Chennai"
                     />
                   </div>
-                </div>
-              )}
 
-              {/* ── STEP 6: CORE PRIORITIES ── */}
-              {step === 6 && (
-                <div className="diag-step-container">
-                  <div className="diag-q-meta">
-                    <span className="q-badge">STEP 06</span>
-                    <h2 className="diag-question-title">Select your Top 2 or 3 Core Priorities</h2>
-                    <p className="diag-question-sub">
-                      Choose what matters most to you ({priorities.length}/3 selected). We evaluate trade-offs against these.
-                    </p>
-                  </div>
-                  <div className="pill-selector-grid">
-                    {priorityOptions.map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        className={`pill-btn ${priorities.includes(p) ? 'active' : ''}`}
-                        onClick={() => togglePriority(p)}
-                      >
-                        {priorities.includes(p) && <span className="pill-icon">{Icons.check}</span>}
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="step-actions-bar">
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => setStep(7)}
-                    >
-                      {priorities.length > 0 ? `Continue to Equipment (${priorities.length} Selected)` : "Continue to Equipment (Skip)"} {Icons.arrowRight}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ── STEP 7: NON-NEGOTIABLE FEATURES (SEPARATE FOR CAR VS BIKE) ── */}
-              {step === 7 && (
-                <div className="diag-step-container">
-                  <div className="diag-q-meta">
-                    <span className="q-badge">STEP 07</span>
-                    <h2 className="diag-question-title">
-                      {isBike ? "Any Non-Negotiable Motorcycle Equipment?" : "Any Non-Negotiable Car Features?"}
-                    </h2>
-                    <p className="diag-question-sub">
-                      Used by our <strong>Variant Suggester</strong> to pinpoint the exact trim without overpaying for useless extras.
-                    </p>
-                  </div>
-                  <div className="pill-selector-grid">
-                    {featureOptions.map((f) => (
-                      <button
-                        key={f}
-                        type="button"
-                        className={`pill-btn ${features.includes(f) ? 'active' : ''}`}
-                        onClick={() => toggleFeature(f)}
-                      >
-                        {features.includes(f) && <span className="pill-icon">{Icons.check}</span>}
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="step-actions-bar">
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => setStep(8)}
-                    >
-                      Next: Maintenance Mindset {Icons.arrowRight}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ── STEP 8: MAINTENANCE & CONTENDERS ── */}
-              {step === 8 && (
-                <div className="diag-step-container">
-                  <div className="diag-q-meta">
-                    <span className="q-badge">STEP 08</span>
-                    <h2 className="diag-question-title">Maintenance Mindset & Shortlisted Contenders</h2>
-                    <p className="diag-question-sub">
-                      Are you looking for zero-drama reliability, or comfortable with scheduled enthusiast upkeep for performance?
-                    </p>
-                  </div>
-
-                  <div className="chip-cards-grid grid-2" style={{ marginBottom: 20 }}>
-                    {maintenanceOptions.map((m) => (
-                      <button
-                        key={m.value}
-                        type="button"
-                        className={`chip-card ${maintenanceMindset === m.value ? 'selected' : ''}`}
-                        onClick={() => setMaintenanceMindset(m.value)}
-                      >
-                        <div className="chip-card-header">
-                          <span className="chip-card-title">{m.label}</span>
-                          {maintenanceMindset === m.value && <span className="chip-check">{Icons.check}</span>}
-                        </div>
-                        <span className="chip-card-desc">{m.desc}</span>
-                      </button>
-                    ))}
+                  <div className="form-group" style={{ marginBottom: 20 }}>
+                    <label className="form-label">Maintenance Philosophy & Workshop Tolerance</label>
+                    <div className="chip-cards-grid grid-2">
+                      {maintenanceOptions.map((m) => (
+                        <button
+                          key={m.value}
+                          type="button"
+                          className={`chip-card ${maintenanceMindset === m.value ? 'selected' : ''}`}
+                          onClick={() => setMaintenanceMindset(m.value)}
+                        >
+                          <div className="chip-card-header">
+                            <span className="chip-card-title">{m.label}</span>
+                            {maintenanceMindset === m.value && <span className="chip-check">{Icons.check}</span>}
+                          </div>
+                          <span className="chip-card-desc">{m.desc}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 16 }}>
@@ -720,7 +851,7 @@ export default function Advisor() {
                     <input
                       type="text"
                       className="input"
-                      placeholder={isBike ? "e.g. 390 Duke vs Interceptor 650 vs Himalayan 450" : "e.g. Slavia 1.5 vs Virtus GT vs Creta Turbo"}
+                      placeholder={isBike ? "e.g. Ninja ZX-10R vs S1000RR vs Africa Twin" : "e.g. Slavia 1.5 vs Virtus GT vs Creta Turbo"}
                       value={contenders}
                       onChange={(e) => setContenders(e.target.value)}
                     />
@@ -737,15 +868,35 @@ export default function Advisor() {
                     />
                   </div>
 
+                  {diagError && (
+                    <div className="diag-error-box" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: 14, borderRadius: 8, marginBottom: 18 }}>
+                      <p style={{ color: '#ef4444', fontWeight: 600, margin: '0 0 10px 0' }}>{diagError}</p>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={handleGenerateDossier}
+                      >
+                        Retry Live AI Diagnostic ↻
+                      </button>
+                    </div>
+                  )}
+
                   <div className="step-actions-bar">
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setStep(8)}
+                    >
+                      ← Back
+                    </button>
                     <button
                       type="button"
                       className="btn btn-primary btn-lg"
                       style={{ height: 48, padding: '0 28px', fontSize: '1rem' }}
-                      onClick={handleGenerateDossier}
                       disabled={loading}
+                      onClick={handleGenerateDossier}
                     >
-                      {loading ? 'Synthesizing Automotive Dossier...' : `Synthesize AI ${isBike ? 'Motorcycle' : 'Car'} Verdict`}
+                      {loading ? 'Synthesizing Live AI Dossier...' : `Synthesize AI ${isBike ? 'Motorcycle' : 'Car'} Verdict`}
                     </button>
                   </div>
                 </div>
@@ -788,6 +939,7 @@ export default function Advisor() {
                 <h2 className="verdict-main-title">{analysis?.summary_title || "Your Vehicle Recommendation Dossier"}</h2>
                 <div className="verdict-meta-strip">
                   <span className="meta-pill">Category: {category}</span>
+                  {bodyStyle && <span className="meta-pill">Style: {bodyStyle}</span>}
                   <span className="meta-pill">Budget: {budget}</span>
                   <span className="meta-pill">City: {city}</span>
                   <span className="meta-pill">Gearbox: {transmission}</span>
